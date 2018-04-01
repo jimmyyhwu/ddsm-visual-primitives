@@ -1,0 +1,18 @@
+.navbar {
+  background: white;
+  z-index: 1;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.main {
+  margin-top: 30px;
+} 
+
+:target:before {
+  content: "";
+  display: block;
+  height: 30px;
+  margin-top: -30px;
+}

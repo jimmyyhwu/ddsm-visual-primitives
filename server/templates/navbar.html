@@ -1,0 +1,4 @@
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='navbar.css') }}">
+<div class="navbar">
+  {{ unquote_name }} ({{ num_responses }} survey responses submitted) <a href="/home/{{ name }}">[home]</a> <a href="/">[log out]</a>
+</div>

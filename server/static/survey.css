@@ -1,0 +1,38 @@
+.main {
+  width: 65vw;
+}
+.thumb .patch {
+  float: left;
+  margin: 0.1vw;
+  width: 16vw;
+}
+.thumbwrap {
+  position: relative;
+  display: block;
+  width: 70vw;
+}
+.thumbwrap a {
+  text-decoration: none;
+}
+.thumb .raw {
+  height: 80vh;
+}
+.thumb div { 
+  position: fixed;
+  visibility: hidden;
+  top: 10vh;
+  left: 70vw; 
+}
+.thumb:hover div { 
+  visibility: visible;
+}
+.thumb .label { 
+  color: black;
+  position: fixed;
+  visibility: hidden;
+  top: 5vh;
+  left: 70vw; 
+}
+.thumb:hover .label { 
+  visibility: visible;
+}

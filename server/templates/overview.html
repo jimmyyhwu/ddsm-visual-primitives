@@ -1,0 +1,23 @@
+<!doctype html>
+{% include "navbar.html" %}
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='overview.css') }}">
+<div class="main">
+
+    <h1>{{ model }}/{{ layer }}</h1>
+    <p><a href="/home/{{ name }}">[go back to home]</a></p>
+    <h2>Instructions</h2>
+    <p>Please inspect the groups of images below. Each boxed row is a group. If you recognize the highlighted phenomena shown in an image group, please click on it to answer survey questions pertaining to that image group.</p>
+    <p>The +/- annotations above each group indicate the presence of cancer in the images. For example, + + + + - - - - would indicate that the first four images in the group are labeled as cancerous, while the last four images are labeled as non-cancerous. Note that the highlighted region in each image may not necessarily correspond to whether the image is labeled as cancerous. For example, a cancerous image might have a non-cancerous region highlighted.</p>
+    {% for unit in units %}
+    <p id="{{ unit[0] }}"></p>
+    {{ unit[0] }} {{ unit[3] }} <b>{{ unit[1] }}</b><br>
+    <div class="units">
+        <a href="/survey/{% if full %}full/{% endif %}{% if ranked %}ranked/{% endif %}{{ name }}/{{ model }}/{{ layer }}/{{ unit[0] }}">
+          {% for image in unit[2] %}
+            <img src="{{ url_for('static', filename=image) }}">
+          {% endfor %}
+        </a>
+      </div>
+    {% endfor %}
+
+</div>

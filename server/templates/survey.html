@@ -1,0 +1,55 @@
+<!doctype html>
+{% include "navbar.html" %}
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='survey.css') }}">
+<div class="main">
+
+  <h1>{{ model }}/{{ layer }}/{{ unit }}</h1>
+  <p><a href="/overview/{% if full %}full/{% endif %}{% if ranked %}ranked/{% endif %}{{ name }}/{{ model }}/{{ layer }}#{{ unit }}">[go back to {{ model }}/{{ layer }}]</a></p>
+
+  <h2>Instructions</h2>
+  <p>
+    1. Please inspect the highlighted areas within the images on this page, then answer the survey questions below.<br>
+    2. The survey questions pertain only to the images shown on this page.<br>
+    3. The images show small patches of mammograms. You can hover over an image to view the patch within the full-sized mammogram.<br>
+    4. You can view whether a image patch is cancerous or non-cancerous by hovering over the image. The label will show on the right above the full-sized mammogram. Note that the label corresponds only to the image patch, not the entire full-sized mammogram. A full-sized mammogram can have both cancerous and non-cancerous patches.<br>
+    5. <b>You must click on the submit button under the survey questions to save your responses.</b> After your responses are saved, you will be taken back to the previous page.<br>
+  </p>
+
+  <h2>Survey Questions</h2>
+  <p>Note: The following questions pertain only to the images shown on this page.</p>
+  <form action="{{ url_for('handle_survey') }}{% if full %}/full{% endif %}{% if ranked %}/ranked{% endif %}" method="post">
+    <input type="hidden" name="name" value="{{ name }}">
+    <input type="hidden" name="model" value="{{ model }}">
+    <input type="hidden" name="layer" value="{{ layer }}">
+    <input type="hidden" name="unit" value="{{ unit }}">
+    Do these images show recognizable phenomena?<br>
+    <input type="text" name="q1" value="{% if old_response is not none %}{{ old_response.q1 }}{% endif %}" required>
+    <br>
+    If the images show recognizable phenomena, are they associated with breast cancer?<br>
+    <input type="text" name="q2" value="{% if old_response is not none %}{{ old_response.q2 }}{% endif %}" required>
+    <br>
+    If the images show recognizable phenomena, is there a single unique phenomenon, or are there multiple?<br>
+    <input type="text" name="q3" value="{% if old_response is not none %}{{ old_response.q3 }}{% endif %}" required>
+    <br>
+    Please describe each of the phenomena you see. For each phenomenom please indicate its association with breast cancer.<br>
+    <textarea name="q4" rows="10" cols="100" required>{% if old_response is not none %}{{ old_response.q4 }}{% endif %}</textarea><br>
+    <input type="submit">
+  </form>
+
+  {% for row in data %}
+    <div class="thumbwrap">
+      {% for item in row %}
+        <a class="thumb" href="#">
+          <img src="{{ url_for('static', filename=item.img_name) }}" class="patch">
+          <p class="label">patch label: {{ item.label }}</p>
+          <div>
+            <img src="{{ url_for('static', filename=item.raw_name) }}" class="raw">
+            <div style="{{ item.style }} border: 2px solid red;"></div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endfor %}
+  <div style="clear: both;"></div>
+
+</div>

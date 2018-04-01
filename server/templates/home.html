@@ -1,0 +1,31 @@
+<!doctype html>
+{% include "navbar.html" %}
+<div class="main">
+
+  <h1>Welcome {{ unquote_name }}!</h1>
+
+  <p>Please select a model/layer combination below:</p>
+
+  <ul>
+    {% for model_and_layer in models_and_layers %}
+      <li><a href="/overview/{{ name }}/{{ model_and_layer }}">[{{ model_and_layer }}]</a></li>
+    {% endfor %}
+  </ul>
+
+  <p>You may view your previously submitted survey responses below:</p>
+
+  <ul>
+    {% for key, units in responded_units %}
+    <li>{{ key }}:{% for unit in units %} <a href="/survey/full/{{ name }}/{{ key }}/{{ unit }}">[{{ unit }}]</a>{% endfor %}</li>
+    {% endfor %}
+  </ul>
+
+  <p>If necessary, you may select from the full list of model/layer combinations below:</p>
+
+  <ul>
+    {% for model_and_layer in full_models_and_layers %}
+      <li><a href="/overview/full/{{ name }}/{{ model_and_layer }}">[{{ model_and_layer }}]</a></li>
+    {% endfor %}
+  </ul>
+
+</div>

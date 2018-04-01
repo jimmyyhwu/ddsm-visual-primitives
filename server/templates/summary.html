@@ -1,0 +1,10 @@
+<!doctype html>
+<h1>Summary of Responses</h1>
+{% for name, unquote_name, responded_units in summary %}
+  <h2>{{ unquote_name }}</h2>
+  <ul>
+    {% for key, units in responded_units %}
+    <li>{{ key }}:{% for unit in units %} <a href="/survey/full/{{ name }}/{{ key }}/{{ unit }}">[{{ unit }}]</a>{% endfor %}</li>
+    {% endfor %}
+  </ul>
+{% endfor %}

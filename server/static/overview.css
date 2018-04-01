@@ -1,0 +1,18 @@
+.main {
+  width: 88vw;
+}
+
+img {
+  width: 10vw;
+}
+
+.units {
+  border: 1px solid black;
+  display: inline-block;
+  padding: 8px;
+  margin-bottom: 16px;
+}
+
+a {
+  text-decoration: none;
+}
