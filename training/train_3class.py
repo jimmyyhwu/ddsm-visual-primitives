@@ -1,4 +1,4 @@
-# classification into (no cancer / cancer)
+# classification into (no cancer / benign / cancer)
 
 import argparse
 import os
@@ -71,7 +71,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
     data_time = AverageMeter()
     losses = AverageMeter()
     accuracies = AverageMeter()
-    auc = torchnet.meter.AUCMeter()
+    auc0 = torchnet.meter.AUCMeter()
+    auc1 = torchnet.meter.AUCMeter()
+    auc2 = torchnet.meter.AUCMeter()
     model.train()
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
@@ -87,8 +89,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         acc = accuracy(output.data, target)
         losses.update(loss.data[0], input.size(0))
         accuracies.update(acc, input.size(0))
-        prob = nn.Softmax()(output)[:, 1]
-        auc.add(prob.data, target)
+        prob = nn.Softmax()(output)
+        auc0.add(prob.data[:, 0], target.eq(0))
+        auc1.add(prob.data[:, 1], target.eq(1))
+        auc2.add(prob.data[:, 2], target.eq(2))
 
         optimizer.zero_grad()
         loss.backward()
@@ -106,14 +110,16 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, accuracy=accuracies))
 
-    return batch_time.avg, data_time.avg, losses.avg, accuracies.avg, auc.value()[0]
+    return batch_time.avg, data_time.avg, losses.avg, accuracies.avg, auc0.value()[0], auc1.value()[0], auc2.value()[0]
 
 
 def validate(val_loader, model, criterion):
     batch_time = AverageMeter()
     losses = AverageMeter()
     accuracies = AverageMeter()
-    auc = torchnet.meter.AUCMeter()
+    auc0 = torchnet.meter.AUCMeter()
+    auc1 = torchnet.meter.AUCMeter()
+    auc2 = torchnet.meter.AUCMeter()
     model.eval()
     end = time.time()
     for i, (input, target) in enumerate(val_loader):
@@ -127,8 +133,10 @@ def validate(val_loader, model, criterion):
         acc = accuracy(output.data, target)
         losses.update(loss.data[0], input.size(0))
         accuracies.update(acc, input.size(0))
-        prob = nn.Softmax()(output)[:, 1]
-        auc.add(prob.data, target)
+        prob = nn.Softmax()(output)
+        auc0.add(prob.data[:, 0], target.eq(0))
+        auc1.add(prob.data[:, 1], target.eq(1))
+        auc2.add(prob.data[:, 2], target.eq(2))
 
         batch_time.update(time.time() - end)
         end = time.time()
@@ -140,7 +148,7 @@ def validate(val_loader, model, criterion):
                   'Accuracy {accuracy.val:.4f} ({accuracy.avg:.4f})'.format(
                    i, len(val_loader), batch_time=batch_time, loss=losses, accuracy=accuracies))
 
-    return batch_time.avg, losses.avg, accuracies.avg, auc.value()[0]
+    return batch_time.avg, losses.avg, accuracies.avg, auc0.value()[0], auc1.value()[0], auc2.value()[0]
 
 
 def main(cfg):
@@ -229,19 +237,23 @@ def main(cfg):
         lr = adjust_learning_rate(optimizer, epoch)
         train_summary_writer.add_scalar('learning_rate', lr, epoch + 1)
 
-        train_batch_time, train_data_time, train_loss, train_accuracy, train_auc = train(
+        train_batch_time, train_data_time, train_loss, train_accuracy, train_auc0, train_auc1, train_auc2 = train(
             train_loader, model, criterion, optimizer, epoch)
         train_summary_writer.add_scalar('batch_time', train_batch_time, epoch + 1)
         train_summary_writer.add_scalar('loss', train_loss, epoch + 1)
         train_summary_writer.add_scalar('accuracy', train_accuracy, epoch + 1)
-        train_summary_writer.add_scalar('auc', train_auc, epoch + 1)
+        train_summary_writer.add_scalar('auc0', train_auc0, epoch + 1)
+        train_summary_writer.add_scalar('auc1', train_auc1, epoch + 1)
+        train_summary_writer.add_scalar('auc2', train_auc2, epoch + 1)
 
-        val_batch_time, val_loss, val_accuracy, val_auc = validate(
+        val_batch_time, val_loss, val_accuracy, val_auc0, val_auc1, val_auc2 = validate(
             val_loader, model, criterion)
         val_summary_writer.add_scalar('batch_time', val_batch_time, epoch + 1)
         val_summary_writer.add_scalar('loss', val_loss, epoch + 1)
         val_summary_writer.add_scalar('accuracy', val_accuracy, epoch + 1)
-        val_summary_writer.add_scalar('auc', val_auc, epoch + 1)
+        val_summary_writer.add_scalar('auc0', val_auc0, epoch + 1)
+        val_summary_writer.add_scalar('auc1', val_auc1, epoch + 1)
+        val_summary_writer.add_scalar('auc2', val_auc2, epoch + 1)
 
         if (epoch + 1) % cfg.training.checkpoint_epochs == 0:
             checkpoint_path = save_checkpoint(checkpoint_dir, {

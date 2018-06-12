@@ -5,7 +5,7 @@
 
 - python 2.7
 - PIL
-- pytorch 0.2
+- pytorch 0.2 (`conda install pytorch=0.2 cuda80 -c soumith`)
 - torchvision 0.1.9 (`pip uninstall torchvision && conda install torchvision=0.1.9 -c soumith`)
 - [torchnet](https://github.com/pytorch/tnt) (`pip install git+https://github.com/pytorch/tnt.git@master`)
 - tensorboardX
@@ -37,12 +37,18 @@ The pretrained model checkpoints will be downloaded to the `pretrained` director
 
 ### Training
 
-The [`train.py`](train.py) training script uses Munch config files for starting and resuming training runs. An initial config file is used to start a run, and an updated config file is written to the run's log directory every time a checkpoint is written. The updated config file contains all the parameters required to resume the run from the last checkpoint.
+The [`train.py`](train.py) and [`train_3class.py`](train_3class.py) training scripts use Munch config files for starting and resuming training runs. An initial config file is used to start a run, and an updated config file is written to the run's log directory every time a checkpoint is written. The updated config file contains all the parameters required to resume the run from the last checkpoint.
 
-Please see the [`config`](config) directory for the reference configurations we used. For example, the following command trains an AlexNet:
+Please see the [`config`](config) directory for the reference configurations we used. For example, the following command trains an AlexNet for (no cancer / cancer) classification:
 
 ```bash
-python train.py config/alexnet.yml
+python train.py config/2class/alexnet.yml
+```
+
+A ResNet-152 for (no cancer / benign/ cancer) classification can also be trained:
+
+```bash
+python train_3class.py config/3class/resnet152.yml
 ```
 
 The `logs_dir` parameter specifies the root log directory, which defaults to `logs`. Each run will create a new log directory inside `logs_dir` for storing both TensorBoard log files for visualization and Munch config files for resuming the run. Similarly, the `checkpoints_dir` parameter specifies the root checkpoint directory, which defaults to `checkpoints`. Each run creates a new checkpoint directory for storing model checkpoints. It may be appropriate to point `checkpoints_dir` to a location with more storage capacity.
@@ -50,7 +56,7 @@ The `logs_dir` parameter specifies the root log directory, which defaults to `lo
 To resume a training run from the latest checkpoint, simply pass in the config file from the log directory for that run. For example:
 
 ```bash
-python train.py logs/run_dir/config.yml
+python train_2class.py logs/run_dir/config.yml
 ```
 
 You may also modify the `resume` parameter to resume from an earlier checkpoint. Note that no config file will be written to the run's log directory until the first model checkpoint is written.
