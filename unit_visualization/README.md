@@ -22,6 +22,9 @@ python generate_unitsegments.py --experiment_name inception_v3 --config_path ../
 
 # resnet152
 python generate_unitsegments.py --experiment_name resnet152 --config_path ../training/pretrained/resnet152/config.yml --epoch 5
+
+# resnet152_3class
+python generate_unitsegments.py --experiment_name resnet152_3class --config_path ../training/pretrained/resnet152_3class/config.yml --epoch 5
 ```
 
 The output visualizations will be written to `output/images/`, in a subdirectory specified by `--experiment_name`. Visualizations are created for all units in each convolutional layer. By default, the top 64 images for each unit are visualized. For example, `output/images/alexnet/conv5/unit_0001` would contain 64 images corresponding to visualizations of the top 64 images for unit_0001 in the conv5 layer of a trained AlexNet.
