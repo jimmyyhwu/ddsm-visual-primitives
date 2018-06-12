@@ -17,6 +17,14 @@ from torch.autograd import Variable
 import dataset
 
 
+# pytorch 0.2 and torchvision 0.1.9
+import sys
+import torchvision
+assert sys.version.startswith('2')
+assert torch.__version__.startswith('0.2')
+assert '0.1.9' in torchvision.__file__
+
+
 def accuracy(output, target):
     pred = output.max(1)[1]
     return 100.0 * target.eq(pred).float().mean()
