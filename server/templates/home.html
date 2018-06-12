@@ -12,6 +12,14 @@
     {% endfor %}
   </ul>
 
+  <p>Or, select a model/layer combination below that uses an alternative ranking:</p>
+
+  <ul>
+    {% for model_and_layer in ranked_models_and_layers %}
+      <li><a href="/overview/ranked/{{ name }}/{{ model_and_layer }}">[{{ model_and_layer }}]</a></li>
+    {% endfor %}
+  </ul>
+
   <p>You may view your previously submitted survey responses below:</p>
 
   <ul>
