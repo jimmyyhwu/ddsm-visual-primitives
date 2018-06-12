@@ -194,8 +194,8 @@ def main(cfg):
     train_transforms = []
     val_transforms = []
     if cfg.arch.model == 'inception_v3':
-        train_transforms.append(transforms.Resize(299))
-        val_transforms.append(transforms.Resize(299))
+        train_transforms.append(transforms.Scale(299))
+        val_transforms.append(transforms.Scale(299))
 
     train_dataset = dataset.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
         transforms.ToTensor(),
