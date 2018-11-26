@@ -11,20 +11,11 @@ import torch.nn as nn
 import torchnet
 import torchvision.models as models
 import torchvision.transforms as transforms
-import yaml
 from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
 import dataset
-
-
-# pytorch 0.2 and torchvision 0.1.9
-import sys
-import torchvision
-assert sys.version.startswith('2')
-assert torch.__version__.startswith('0.2')
-assert '0.1.9' in torchvision.__file__
 
 
 def accuracy(output, target):
@@ -164,10 +155,6 @@ def main(cfg):
     print('log_dir: {}'.format(log_dir))
     print('checkpoint_dir: {}'.format(checkpoint_dir))
 
-    model_names = sorted(name for name in models.__dict__
-        if name.islower() and not name.startswith("__")
-        and callable(models.__dict__[name]))
-
     print("=> creating model '{}'".format(cfg.arch.model))
     model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
 
@@ -259,7 +246,7 @@ def main(cfg):
             checkpoint_path = save_checkpoint(checkpoint_dir, {
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
-                'optimizer' : optimizer.state_dict(),
+                'optimizer': optimizer.state_dict(),
             }, epoch + 1)
             cfg.training.log_dir = log_dir
             cfg.training.resume = checkpoint_path
