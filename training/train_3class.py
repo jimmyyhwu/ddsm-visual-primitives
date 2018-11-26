@@ -221,16 +221,23 @@ def main():
         normalize,
     ]))
 
-    # limit training data for debugging:
-    train_indices = range(20)
+    if cfg.training.debug:
+        # limit training data for debugging:
+        train_indices = range(cfg.data.batch_size * 20)
 
-    # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=cfg.data.batch_size, shuffle=False,
-        num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
-        num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=cfg.data.batch_size, shuffle=False,
+            num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
+            num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
+    else:
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=cfg.data.batch_size, shuffle=True,
+            num_workers=cfg.data.workers, pin_memory=True)
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
+            num_workers=cfg.data.workers, pin_memory=True)
 
     train_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'train'))
     val_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'val'))

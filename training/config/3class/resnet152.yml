@@ -20,4 +20,5 @@ training:
     checkpoint_epochs: 1
     log_dir:
     epochs: 2
+    debug: true
     resume:
