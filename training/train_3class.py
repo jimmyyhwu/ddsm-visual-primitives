@@ -114,13 +114,16 @@ def validate(val_loader, model, criterion):
     auc2 = torchnet.meter.AUCMeter()
     model.eval()
     end = time.time()
+    
     for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(async=True)
-        input_var = Variable(input, volatile=True)
-        target_var = Variable(target, volatile=True)
 
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        with torch.no_grad():
+            target = target.cuda(async=True)
+            input_var = Variable(input)
+            target_var = Variable(target)
+
+            output = model(input_var)
+            loss = criterion(output, target_var)
 
         acc = accuracy(output.data, target)
         losses.update(loss.item(), input.size(0))
