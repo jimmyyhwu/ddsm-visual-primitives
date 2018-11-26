@@ -114,7 +114,7 @@ def validate(val_loader, model, criterion):
     auc2 = torchnet.meter.AUCMeter()
     model.eval()
     end = time.time()
-    
+
     for i, (input, target) in enumerate(val_loader):
 
         with torch.no_grad():
@@ -259,6 +259,9 @@ def main(cfg):
             cfg.training.resume = checkpoint_path
             with open(os.path.join(log_dir, 'config.yml'), 'w') as f:
                 f.write(cfg.toYAML())
+            print("Checkpoint written: " + checkpoint_path)
+
+    print("Training finished.")
 
 
 if __name__ == '__main__':
