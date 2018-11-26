@@ -79,7 +79,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss = criterion(output, target_var)
 
         acc = accuracy(output.data, target)
-        losses.update(loss.data[0], input.size(0))
+        losses.update(loss.item(), input.size(0))
         accuracies.update(acc, input.size(0))
         prob = nn.Softmax()(output)
         auc0.add(prob.data[:, 0], target.eq(0))
@@ -123,7 +123,7 @@ def validate(val_loader, model, criterion):
         loss = criterion(output, target_var)
 
         acc = accuracy(output.data, target)
-        losses.update(loss.data[0], input.size(0))
+        losses.update(loss.item(), input.size(0))
         accuracies.update(acc, input.size(0))
         prob = nn.Softmax()(output)
         auc0.add(prob.data[:, 0], target.eq(0))
@@ -216,7 +216,7 @@ def main(cfg):
     train_indices = range(20)
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=cfg.data.batch_size, shuffle=False, # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
+        train_dataset, batch_size=cfg.data.batch_size, shuffle=False,  # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
         num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
