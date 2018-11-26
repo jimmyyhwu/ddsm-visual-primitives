@@ -11,6 +11,7 @@ import torch.nn as nn
 import torchnet
 import torchvision.models as models
 import torchvision.transforms as transforms
+from torch.utils.data.sampler import SubsetRandomSampler
 from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
@@ -211,12 +212,15 @@ def main(cfg):
         normalize,
     ]))
 
+    # limit training data for debugging:
+    train_indices = range(20)
+
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=cfg.data.batch_size, shuffle=True,
-        num_workers=cfg.data.workers, pin_memory=True)
+        train_dataset, batch_size=cfg.data.batch_size, shuffle=False, # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
+        num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
-        num_workers=cfg.data.workers, pin_memory=True)
+        num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
 
     train_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'train'))
     val_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'val'))

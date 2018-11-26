@@ -19,5 +19,5 @@ training:
     print_freq: 10
     checkpoint_epochs: 1
     log_dir:
-    epochs: 100
+    epochs: 2
     resume:
