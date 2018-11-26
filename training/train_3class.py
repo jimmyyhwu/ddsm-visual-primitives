@@ -43,6 +43,10 @@ def adjust_learning_rate(optimizer, epoch):
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
+        self.val = None
+        self.avg = None
+        self.sum = None
+        self.count = None
         self.reset()
 
     def reset(self):
@@ -68,19 +72,19 @@ def train(train_loader, model, criterion, optimizer, epoch):
     auc2 = torchnet.meter.AUCMeter()
     model.train()
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for i, (input_data, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
         target = target.cuda(async=True)
-        input_var = Variable(input)
+        input_var = Variable(input_data)
         target_var = Variable(target)
 
         output = model(input_var)
         loss = criterion(output, target_var)
 
         acc = accuracy(output.data, target)
-        losses.update(loss.item(), input.size(0))
-        accuracies.update(acc, input.size(0))
+        losses.update(loss.item(), input_data.size(0))
+        accuracies.update(acc, input_data.size(0))
         prob = nn.Softmax(dim=1)(output)
         auc0.add(prob.data[:, 0], target.eq(0))
         auc1.add(prob.data[:, 1], target.eq(1))
@@ -115,19 +119,19 @@ def validate(val_loader, model, criterion):
     model.eval()
     end = time.time()
 
-    for i, (input, target) in enumerate(val_loader):
+    for i, (input_data, target) in enumerate(val_loader):
 
         with torch.no_grad():
             target = target.cuda(async=True)
-            input_var = Variable(input)
+            input_var = Variable(input_data)
             target_var = Variable(target)
 
             output = model(input_var)
             loss = criterion(output, target_var)
 
         acc = accuracy(output.data, target)
-        losses.update(loss.item(), input.size(0))
-        accuracies.update(acc, input.size(0))
+        losses.update(loss.item(), input_data.size(0))
+        accuracies.update(acc, input_data.size(0))
         prob = nn.Softmax(dim=1)(output)
         auc0.add(prob.data[:, 0], target.eq(0))
         auc1.add(prob.data[:, 1], target.eq(1))
@@ -146,14 +150,15 @@ def validate(val_loader, model, criterion):
     return batch_time.avg, losses.avg, accuracies.avg, auc0.value()[0], auc1.value()[0], auc2.value()[0]
 
 
-def main(cfg):
+def main():
     if cfg.training.resume is not None:
         log_dir = cfg.training.log_dir
         checkpoint_dir = os.path.dirname(cfg.training.resume)
     else:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.%f')
         log_dir = os.path.join(cfg.training.logs_dir, '{}_{}'.format(timestamp, cfg.training.experiment_name))
-        checkpoint_dir = os.path.join(cfg.training.checkpoints_dir, '{}_{}'.format(timestamp, cfg.training.experiment_name))
+        checkpoint_dir = os.path.join(cfg.training.checkpoints_dir,
+                                      '{}_{}'.format(timestamp, cfg.training.experiment_name))
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
     print('log_dir: {}'.format(log_dir))
@@ -163,6 +168,7 @@ def main(cfg):
     model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
 
     if cfg.arch.model.startswith('alexnet') or cfg.arch.model.startswith('vgg'):
+        # noinspection PyProtectedMember
         model.classifier._modules['6'] = nn.Linear(4096, cfg.arch.num_classes)
     elif cfg.arch.model == 'inception_v3':
         model.aux_logits = False
@@ -218,8 +224,9 @@ def main(cfg):
     # limit training data for debugging:
     train_indices = range(20)
 
+    # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=cfg.data.batch_size, shuffle=False,  # FIXME: set shuffle back to True (changed for SubsetRandomSampler)
+        train_dataset, batch_size=cfg.data.batch_size, shuffle=False,
         num_workers=cfg.data.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=cfg.data.batch_size, shuffle=False,
@@ -269,6 +276,6 @@ if __name__ == '__main__':
     parser.add_argument('config_path', metavar='PATH', help='path to config file')
     args = parser.parse_args()
     config_path = args.config_path
-    with open(config_path, 'r') as f:
-        cfg = Munch.fromYAML(f)
-    main(cfg)
+    with open(config_path, 'r') as config_file:
+        cfg = Munch.fromYAML(config_file)
+    main()
