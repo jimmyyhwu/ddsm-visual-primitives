@@ -223,7 +223,7 @@ def main():
 
     if cfg.training.debug:
         # limit training data for debugging:
-        train_indices = range(cfg.data.batch_size * 20)
+        train_indices = range(cfg.data.batch_size * 10)
 
         train_loader = torch.utils.data.DataLoader(
             train_dataset, batch_size=cfg.data.batch_size, shuffle=False,
@@ -285,4 +285,6 @@ if __name__ == '__main__':
     config_path = args.config_path
     with open(config_path, 'r') as config_file:
         cfg = Munch.fromYAML(config_file)
+    startTime = datetime.now()
     main()
+    print("Runtime: %s" % (datetime.now() - startTime))
