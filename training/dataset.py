@@ -6,13 +6,15 @@ from PIL import Image
 class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, split, transform):
         self.root = root
+        self.transform = transform
+
         def process_line(line):
             image_name, label = line.strip().split(' ')
             label = int(label)
             return image_name, label
+
         with open(os.path.join(root, '{}.txt'.format(split)), 'r') as f:
-            self.image_list = map(process_line, f.readlines())
-        self.transform = transform
+            self.image_list = list(map(process_line, f.readlines()))
 
     def __len__(self):
         return len(self.image_list)
