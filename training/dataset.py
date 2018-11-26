@@ -22,5 +22,6 @@ class DDSM(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         image_name, label = self.image_list[idx]
         image = Image.open(os.path.join(self.root, image_name))
+        image = image.crop([0, 0, 224, 224])
         image = self.transform(image)
         return image, label
