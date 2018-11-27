@@ -26,7 +26,7 @@ def cache_patch_labels():
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--labels_path', default='../data/ddsm_2class/val.txt')
+parser.add_argument('--labels_path', default='../data/ddsm_3class/val.txt')
 parser.add_argument('--output_dir', default='data/labels/')
 parser.add_argument('--output_file', default='val.pickle')
 args = parser.parse_args()
