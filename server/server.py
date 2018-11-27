@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import Flask, render_template, request
 from flask import redirect
 import urllib
+import urllib.parse
 
 import backend
 
@@ -19,7 +20,7 @@ def summary():
     response_summary = backend.get_summary()
     summary2 = []
     for (name, responded_units) in response_summary:
-        unquote_name = urllib.unquote_plus(name)
+        unquote_name = urllib.parse.unquote_plus(name)
         summary2.append((name, unquote_name, responded_units))
     return render_template('summary.html', summary=summary2)
 
@@ -27,13 +28,13 @@ def summary():
 @app.route('/handle_login', methods=['POST'])
 def handle_login():
     name = request.form['name']
-    name = urllib.quote_plus(name)
+    name = urllib.parse.quote_plus(name)
     return redirect('/home/{}'.format(name))
 
 
 @app.route('/home/<name>')
 def home(name):
-    unquote_name = urllib.unquote_plus(name)
+    unquote_name = urllib.parse.unquote_plus(name)
     models_and_layers = backend.get_models_and_layers()
     models_and_layers = map(lambda x: '{}/{}'.format(x[0], x[1]), models_and_layers)
     full_models_and_layers = backend.get_models_and_layers(full=True)
@@ -50,7 +51,7 @@ def home(name):
 
 @app.route('/overview/<name>/<model>/<layer>')
 def overview(name, model, layer, full=False, ranked=False):
-    unquote_name = urllib.unquote_plus(name)
+    unquote_name = urllib.parse.unquote_plus(name)
     units = backend.get_units(name, model, layer, full=full, ranked=ranked)
     num_responses = backend.get_num_responses(name)
     if ranked:
@@ -71,7 +72,7 @@ def overview_ranked(name, model, layer):
 
 @app.route('/survey/<name>/<model>/<layer>/<unit>')
 def survey(name, model, layer, unit, full=False, ranked=False):
-    unquote_name = urllib.unquote_plus(name)
+    unquote_name = urllib.parse.unquote_plus(name)
     data, old_response = backend.get_unit_data(name, model, layer, unit)
     num_responses = backend.get_num_responses(name)
     return render_template('survey.html', name=name, unquote_name=unquote_name, num_responses=num_responses, full=full,
