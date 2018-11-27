@@ -18,14 +18,6 @@ from PIL import Image
 import models.resnet
 
 
-# pytorch 0.2 and torchvision 0.1.9
-import sys
-import torchvision
-assert sys.version.startswith('2')
-assert torch.__version__.startswith('0.2')
-assert '0.1.9' in torchvision.__file__
-
-
 def surgery(model, arch, num_classes):
     if arch == 'inception_v3' or arch == 'resnet152':
         model.module.fc.cpu()
@@ -35,14 +27,14 @@ def surgery(model, arch, num_classes):
         model.load_state_dict(state_dict)
         model.module.fc.cuda()
     else:
-        raise Exception
+        raise KeyError("Unsupported model architecture: %s" % arch)
 
 
 class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, image_list_path, split, patch_size, transform):
         self.root = root
         with open(image_list_path, 'r') as f:
-            self.image_names = map(lambda line: line.strip(), f.readlines())
+            self.image_names = list(map(lambda line: line.strip(), f.readlines()))
         self.patch_size = patch_size
         self.transform = transform
 
@@ -62,13 +54,9 @@ class DDSM(torch.utils.data.Dataset):
         return image_name, image
 
 
-def main(args):
+def main():
     with open(args.config_path, 'r') as f:
         cfg = Munch.fromYAML(f)
-
-    model_names = sorted(name for name in models.__dict__
-        if name.islower() and not name.startswith("__")
-        and callable(models.__dict__[name]))
 
     print("=> creating model '{}'".format(cfg.arch.model))
     if cfg.arch.model == 'inception_v3':
@@ -81,12 +69,13 @@ def main(args):
         model.fc = nn.Linear(2048, cfg.arch.num_classes)
         features_layer = model.layer4
     else:
-        raise Exception
+        raise KeyError("Unsupported model architecture: %s" % cfg.arch.model)
 
     model = torch.nn.DataParallel(model).cuda()
     cudnn.benchmark = True
 
     resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
+    resume_path = os.path.join('../training', resume_path)
     if os.path.isfile(resume_path):
         print("=> loading checkpoint '{}'".format(resume_path))
         checkpoint = torch.load(resume_path)
@@ -100,7 +89,7 @@ def main(args):
     surgery(model, cfg.arch.model, cfg.arch.num_classes)
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    patch_size = 299 if cfg.arch.model == 'inception_v3' else 227
+    patch_size = 299 if cfg.arch.model == 'inception_v3' else 224
     val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, 'val', patch_size, transforms.Compose([
         transforms.ToTensor(),
         normalize,
@@ -108,24 +97,27 @@ def main(args):
 
     # extract features and max activations
     features = []
+
     def feature_hook(module, input, output):
         features.extend(output.data.cpu().numpy())
+
     features_layer._forward_hooks.clear()
     features_layer.register_forward_hook(feature_hook)
     prob_maps = []
-    max_class_probs = []
+
     for _, image in tqdm(val_dataset):
-        input_var = Variable(image.unsqueeze(0), volatile=True)
-        output = model(input_var)
-        output = output.transpose(1, 3).contiguous()
-        size = output.size()[:3]
-        output = output.view(-1, output.size(3))
-        prob = nn.Softmax()(output)
-        prob = prob.view(size[0], size[1], size[2], -1)
-        prob = prob.transpose(1, 3)
-        prob = prob.data.cpu().numpy()
-        prob_map = prob[0]
-        prob_maps.append(prob_map)
+        with torch.no_grad():
+            input_var = Variable(image.unsqueeze(0))
+            output = model(input_var)
+            output = output.transpose(1, 3).contiguous()
+            size = output.size()[:3]
+            output = output.view(-1, output.size(3))
+            prob = nn.Softmax(dim=1)(output)
+            prob = prob.view(size[0], size[1], size[2], -1)
+            prob = prob.transpose(1, 3)
+            prob = prob.data.cpu().numpy()
+            prob_map = prob[0]
+            prob_maps.append(prob_map)
 
     # save final fc layer weights
     params = list(model.parameters())
@@ -137,27 +129,27 @@ def main(args):
     weighted_max_activations = max_activations * weight_softmax
     unit_indices = np.argsort(-weighted_max_activations, axis=2)
     all_unit_indices_and_counts = []
-    for class_index in xrange(cfg.arch.num_classes):
+    for class_index in range(cfg.arch.num_classes):
         num_top_units = 8
         unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(), return_counts=True))
-        unit_indices_and_counts.sort(key=lambda x: -x[1])
+        unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
         all_unit_indices_and_counts.append(unit_indices_and_counts)    
 
     # save rankings to file
     unit_rankings_dir = os.path.join(args.output_dir, 'unit_rankings', cfg.training.experiment_name, args.final_layer_name)
     if not os.path.exists(unit_rankings_dir):
         os.makedirs(unit_rankings_dir)
-    with open(os.path.join(unit_rankings_dir, 'rankings.pkl'), 'w') as f:
+    with open(os.path.join(unit_rankings_dir, 'rankings.pkl'), 'wb') as f:
         pickle.dump(all_unit_indices_and_counts, f)
 
     # print some statistics
-    for class_index in xrange(cfg.arch.num_classes):
+    for class_index in range(cfg.arch.num_classes):
         print('class index: {}'.format(class_index))
         # which units show up in the top num_top_units all the time?
         # note: unit_id == unit_index + 1
         num_top_units = 8
         unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(), return_counts=True))
-        unit_indices_and_counts.sort(key=lambda x: -x[1])
+        unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
 
         # if we annotate the num_units_annotated top units, what percent of
         # the top num_top_units units on all val images will be annotated?
@@ -178,4 +170,4 @@ parser.add_argument('--raw_image_dir', default='../data/ddsm_raw')
 parser.add_argument('--raw_image_list_path', default='../data/ddsm_raw_image_lists/val.txt')
 parser.add_argument('--output_dir', default='output/')
 args = parser.parse_args()
-main(args)
+main()
