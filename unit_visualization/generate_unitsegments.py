@@ -45,6 +45,7 @@ print("=> creating model '{}'".format(cfg.arch.model))
 model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
 
 if cfg.arch.model == 'alexnet':
+    # noinspection PyProtectedMember
     model.classifier._modules['6'] = nn.Linear(4096, cfg.arch.num_classes)
     features = [
         ('conv1', model.features[0]),
@@ -54,6 +55,7 @@ if cfg.arch.model == 'alexnet':
         ('conv5', model.features[10])
     ]
 elif cfg.arch.model == 'vgg16':
+    # noinspection PyProtectedMember
     model.classifier._modules['6'] = nn.Linear(4096, cfg.arch.num_classes)
     features = [
         ('conv1_2', model.features[2]),
@@ -83,7 +85,7 @@ elif cfg.arch.model == 'resnet152':
         ('layer4', model.layer4)
     ]
 else:
-    raise Exception
+    raise KeyError("Unknown model: %s" % cfg.arch.model)
 
 if cfg.arch.model.startswith('alexnet') or cfg.arch.model.startswith('vgg'):
     model.features = torch.nn.DataParallel(model.features)
@@ -110,18 +112,21 @@ else:
 
 
 features_blobs = []
-def hook_feature(module, input, output):
+
+
+def hook_feature(_, __, output):  # args: module, input, output
     # hook the feature extractor
     features_blobs.append(np.squeeze(output.data.cpu().numpy()))
+
 
 for _, module in features:
     module.register_forward_hook(hook_feature)
 
 
 class DDSM(torch.utils.data.Dataset):
-    def __init__(self, root, image_list, transform):
+    def __init__(self, root, list_of_images, transform):
         self.root = root
-        self.image_list = image_list
+        self.image_list = list_of_images
         self.transform = transform
 
     def __len__(self):
@@ -162,13 +167,13 @@ else:
 imglist_results = []
 maxfeatures = [None] * len(features)
 num_batches = len(data_loader)
-for batch_idx, (input, paths) in enumerate(data_loader):
+for batch_idx, (input_data, paths) in enumerate(data_loader):
     del features_blobs[:]
     print('%d / %d' % (batch_idx+1, num_batches))
 
     with torch.no_grad():
-        input = input.cuda()
-        input_var = Variable(input)
+        input_data = input_data.cuda()
+        input_var = Variable(input_data)
         logit = model.forward(input_var)
 
     imglist_results = imglist_results + list(paths)
@@ -176,11 +181,12 @@ for batch_idx, (input, paths) in enumerate(data_loader):
         # initialize the feature variable
         for i, feat_batch in enumerate(features_blobs):
             size_features = (len(dataset), feat_batch.shape[1])
+            # noinspection PyTypeChecker
             maxfeatures[i] = np.zeros(size_features)
     start_idx = batch_idx*args.batch_size
     end_idx = min((batch_idx+1)*args.batch_size, len(dataset))
     for i, feat_batch in enumerate(features_blobs):
-        maxfeatures[i][start_idx:end_idx] = np.max(np.max(feat_batch,3),2)
+        maxfeatures[i][start_idx:end_idx] = np.max(np.max(feat_batch, 3), 2)
 
 
 # generate the unit visualization
@@ -202,16 +208,16 @@ for layerID, (name, layer) in enumerate(features):
         dataset_top, batch_size=num_top, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-    for unitID, (input, paths) in enumerate(data_loader_top):
+    for unitID, (input_data, paths) in enumerate(data_loader_top):
         del features_blobs[:]
         print('%d / %d' % (unitID+1, num_units))
 
         with torch.no_grad():
-            input = input.cuda()
-            input_var = Variable(input)
+            input_data = input_data.cuda()
+            input_var = Variable(input_data)
             logit = model.forward(input_var)
             feature_maps = features_blobs[layerID]
-            images_input = input.cpu().numpy()
+            images_input = input_data.cpu().numpy()
 
         max_value = 0
         for i in range(num_top):
@@ -221,16 +227,17 @@ for layerID, (name, layer) in enumerate(features):
             feature_map = feature_map / max_value
             mask = np.array(Image.fromarray(feature_map).resize(resize_size, resample=Image.BILINEAR))
             alpha = 0.2
-            mask[mask < threshold_scale] = alpha # binarize the mask
+            mask[mask < threshold_scale] = alpha  # binarize the mask
             mask[mask > threshold_scale] = 1.0
 
             img = Image.open(os.path.join(data_root, paths[i]))
             img = img.resize(resize_size, resample=Image.BILINEAR)
             img = np.asarray(img, dtype=np.float32)
-            img_mask = np.multiply(img, mask[:,:, np.newaxis])
+            img_mask = np.multiply(img, mask[:, :, np.newaxis])
             img_mask = np.uint8(img_mask)
             suffix = os.path.basename(list(paths)[i])
-            layer_unit_dir = os.path.join(output_dir, 'images', args.experiment_name, name, 'unit_{:04}'.format(unitID + 1))
+            layer_unit_dir = os.path.join(output_dir, 'images', args.experiment_name, name,
+                                          'unit_{:04}'.format(unitID + 1))
             if not os.path.exists(layer_unit_dir):
                 os.makedirs(layer_unit_dir)
             out_img_name = os.path.join(layer_unit_dir, '{:04}_{}'.format(i + 1, suffix))
