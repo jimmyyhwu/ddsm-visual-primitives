@@ -21,7 +21,7 @@ def cache_patch_labels():
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-    with open(os.path.join(args.output_dir, args.output_file), 'w') as f:
+    with open(os.path.join(args.output_dir, args.output_file), 'wb') as f:
         pickle.dump(cache, f)
 
 
