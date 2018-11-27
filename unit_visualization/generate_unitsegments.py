@@ -4,11 +4,12 @@ import argparse
 import os
 
 import numpy as np
-import torch
 import torch.nn as nn
+import torch.utils.data
 import torch.backends.cudnn as cudnn
 import torchvision.models as models
 import torchvision.transforms as transforms
+from torch.utils.data.sampler import SubsetRandomSampler
 from munch import Munch
 from PIL import Image
 from torch.autograd import Variable
@@ -33,13 +34,12 @@ threshold_scale = 0.2       # the scale used to segment the feature map. Smaller
 
 # dataset setup
 data_root = cfg.data.root
-resize_size = (227, 227)
+resize_size = (224, 224)
 output_dir = 'output'
 
-
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 print("=> creating model '{}'".format(cfg.arch.model))
 model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
@@ -130,6 +130,7 @@ class DDSM(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         image_name = self.image_list[idx]
         image = Image.open(os.path.join(self.root, image_name))
+        image = image.crop([0, 0, 224, 224])
         image = self.transform(image)
         return image, image_name
 
@@ -137,7 +138,7 @@ class DDSM(torch.utils.data.Dataset):
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 with open(os.path.join(data_root, 'val.txt'), 'r') as f:
-    image_list = map(lambda x: x.strip().split(' ')[0], f.readlines())
+    image_list = list(map(lambda x: x.strip().split(' ')[0], f.readlines()))
 val_transforms = []
 if cfg.arch.model == 'inception_v3':
     val_transforms.append(transforms.Scale(299))
@@ -145,9 +146,16 @@ dataset = DDSM(data_root, image_list, transforms.Compose(val_transforms + [
     transforms.ToTensor(),
     normalize,
 ]))
-data_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=args.batch_size, shuffle=False,
-    num_workers=args.workers, pin_memory=True)
+
+if cfg.training.debug:
+    train_indices = range(cfg.data.batch_size * 10)
+    data_loader = torch.utils.data.DataLoader(
+        dataset, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True, sampler=SubsetRandomSampler(train_indices))
+else:
+    data_loader = torch.utils.data.DataLoader(
+        dataset, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True)
 
 
 # extract the max value activation for each image
@@ -157,9 +165,12 @@ num_batches = len(data_loader)
 for batch_idx, (input, paths) in enumerate(data_loader):
     del features_blobs[:]
     print('%d / %d' % (batch_idx+1, num_batches))
-    input = input.cuda()
-    input_var = Variable(input, volatile=True)
-    logit = model.forward(input_var)
+
+    with torch.no_grad():
+        input = input.cuda()
+        input_var = Variable(input)
+        logit = model.forward(input_var)
+
     imglist_results = imglist_results + list(paths)
     if maxfeatures[0] is None:
         # initialize the feature variable
@@ -194,11 +205,14 @@ for layerID, (name, layer) in enumerate(features):
     for unitID, (input, paths) in enumerate(data_loader_top):
         del features_blobs[:]
         print('%d / %d' % (unitID+1, num_units))
-        input = input.cuda()
-        input_var = Variable(input, volatile=True)
-        logit = model.forward(input_var)
-        feature_maps = features_blobs[layerID]
-        images_input = input.cpu().numpy()
+
+        with torch.no_grad():
+            input = input.cuda()
+            input_var = Variable(input)
+            logit = model.forward(input_var)
+            feature_maps = features_blobs[layerID]
+            images_input = input.cpu().numpy()
+
         max_value = 0
         for i in range(num_top):
             feature_map = feature_maps[i][unitID]
