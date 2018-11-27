@@ -98,8 +98,8 @@ def main():
     # extract features and max activations
     features = []
 
-    def feature_hook(module, input, output):
-        features.extend(output.data.cpu().numpy())
+    def feature_hook(_, __, layer_output):  # args: module, input, output
+        features.extend(layer_output.data.cpu().numpy())
 
     features_layer._forward_hooks.clear()
     features_layer.register_forward_hook(feature_hook)
@@ -131,12 +131,14 @@ def main():
     all_unit_indices_and_counts = []
     for class_index in range(cfg.arch.num_classes):
         num_top_units = 8
-        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(), return_counts=True))
+        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(),
+                                                 return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
         all_unit_indices_and_counts.append(unit_indices_and_counts)    
 
     # save rankings to file
-    unit_rankings_dir = os.path.join(args.output_dir, 'unit_rankings', cfg.training.experiment_name, args.final_layer_name)
+    unit_rankings_dir = os.path.join(args.output_dir, 'unit_rankings', cfg.training.experiment_name,
+                                     args.final_layer_name)
     if not os.path.exists(unit_rankings_dir):
         os.makedirs(unit_rankings_dir)
     with open(os.path.join(unit_rankings_dir, 'rankings.pkl'), 'wb') as f:
@@ -148,7 +150,8 @@ def main():
         # which units show up in the top num_top_units all the time?
         # note: unit_id == unit_index + 1
         num_top_units = 8
-        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(), return_counts=True))
+        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(),
+                                                 return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
 
         # if we annotate the num_units_annotated top units, what percent of
