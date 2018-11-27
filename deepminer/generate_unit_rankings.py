@@ -31,7 +31,7 @@ def surgery(model, arch, num_classes):
 
 
 class DDSM(torch.utils.data.Dataset):
-    def __init__(self, root, image_list_path, split, patch_size, transform):
+    def __init__(self, root, image_list_path, patch_size, transform):
         self.root = root
         with open(image_list_path, 'r') as f:
             self.image_names = list(map(lambda line: line.strip(), f.readlines()))
@@ -90,7 +90,7 @@ def main():
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     patch_size = 299 if cfg.arch.model == 'inception_v3' else 224
-    val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, 'val', patch_size, transforms.Compose([
+    val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, patch_size, transforms.Compose([
         transforms.ToTensor(),
         normalize,
     ]))
