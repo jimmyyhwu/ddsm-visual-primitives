@@ -58,7 +58,7 @@ def get_units(name, model, layer, sample=8, full=False, ranked=False):
         image_names = sorted(os.listdir(os.path.join(STATIC_DIR, unit_dir)))[:sample]
         unit_labels = [labels[image_name[5:]] for image_name in image_names]
         unit_labels_str = ' '.join(['+' if label == 1 else '-' for label in unit_labels])
-        image_paths = map(lambda x: os.path.join(unit_dir, x), image_names)
+        image_paths = [os.path.join(unit_dir, x) for x in image_names]
         units.append((unit, message, image_paths, unit_labels_str))
         sums.append(sample - sum(unit_labels))
     if ranked:
