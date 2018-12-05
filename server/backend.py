@@ -51,13 +51,14 @@ def get_units(name, model, layer, sample=8, full=False, ranked=False):
     units = []
     sums = []
     labels = get_labels()
+    label_symbols = {0: '-', 1: 'o', 2: '+'}
     for unit in sorted(os.listdir(os.path.join(STATIC_DIR, layer_dir))):
         key = '{}/{}/{}'.format(model, layer, unit)
         message = '[response recorded]' if key in responses else ''
         unit_dir = os.path.join(layer_dir, unit)
         image_names = sorted(os.listdir(os.path.join(STATIC_DIR, unit_dir)))[:sample]
         unit_labels = [labels[image_name[5:]] for image_name in image_names]
-        unit_labels_str = ' '.join(['+' if label >= 1 else '-' for label in unit_labels])
+        unit_labels_str = ' '.join([label_symbols[label] for label in unit_labels])
         image_paths = [os.path.join(unit_dir, x) for x in image_names]
         units.append((unit, message, image_paths, unit_labels_str))
         sums.append(sample - sum(unit_labels))
@@ -83,10 +84,11 @@ def get_unit_data(name, model, layer, unit, sample=32, num_cols=4):
     image_names = sorted(os.listdir(os.path.join(STATIC_DIR, unit_dir)))[:sample]
     entries = []
     labels = get_labels()
+    label_names = {0: 'normal', 1: 'begnin', 2: 'malignant'}
     for image_name in image_names:
         # remove the first 5 chars containing the image rank
         parts = image_name[5:].split('-')
-        label = 'positive' if labels[image_name[5:]] == 1 else 'negative'
+        label = label_names[labels[image_name[5:]]]
         raw_name = '{}-{}.jpg'.format(parts[0], parts[1])
         raw_width, raw_height = Image.open(os.path.join(STATIC_DIR, 'raw/{}'.format(raw_name))).size
         # noinspection PyTypeChecker
