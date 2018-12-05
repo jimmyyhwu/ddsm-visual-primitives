@@ -1,4 +1,4 @@
-# determine the units most frequently 'influential' to classification decisions
+# do a forward pass on all patches in validation set and store results in DB
 
 import argparse
 import os
@@ -18,16 +18,15 @@ from PIL import Image
 import models.resnet
 
 
-def surgery(model, arch, num_classes):
-    if arch == 'inception_v3' or arch == 'resnet152':
-        model.module.fc.cpu()
-        state_dict = model.state_dict()
-        state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
-        model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
-        model.load_state_dict(state_dict)
-        model.module.fc.cuda()
-    else:
-        raise KeyError("Unsupported model architecture: %s" % arch)
+def replace_last_model_layer(model):
+    # we assume that the model is ResNet152
+    num_classes = 3
+    model.module.fc.cpu()
+    state_dict = model.state_dict()
+    state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
+    model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
+    model.load_state_dict(state_dict)
+    model.module.fc.cuda()
 
 
 class DDSM(torch.utils.data.Dataset):
@@ -86,7 +85,7 @@ def main():
         print("=> no checkpoint found at '{}'".format(resume_path))
 
     # convert fc to conv
-    surgery(model, cfg.arch.model, cfg.arch.num_classes)
+    replace_last_model_layer(model)
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     patch_size = 299 if cfg.arch.model == 'inception_v3' else 224
