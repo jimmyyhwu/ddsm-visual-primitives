@@ -7,8 +7,7 @@ def create_connection(filename):
     :return:
     '''
     conn = lite.connect(filename)
-    __generate_tables(conn)
-    return (conn.cursor(), conn)
+    return conn
 
 def __generate_tables(conn):
     '''
@@ -25,3 +24,4 @@ def __generate_tables(conn):
 
 if __name__ == "__main__":
     conn = create_connection("test.db")
+    __generate_tables(conn)
