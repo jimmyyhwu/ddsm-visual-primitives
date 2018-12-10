@@ -1,4 +1,4 @@
-from db.database import create_connection
+from db.database import DB
 import os
 from collections import namedtuple
 
@@ -8,9 +8,10 @@ Patch = namedtuple("Patch", "ground_truth x y width height full_image")
 def populate_db_with_patches(db_path, patch_path):
     patches = get_patches(patch_path)
     insert_statement = generate_sql_insert(patches)
-    with create_connection(db_path) as conn:
-        conn.execute(insert_statement)
-        conn.commit()
+    db = DB(db_path)
+    conn = db.get_connection()
+    conn.execute(insert_statement)
+    conn.commit()
 
 
 def get_patches(patch_path):
