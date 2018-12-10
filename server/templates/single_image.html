@@ -1,0 +1,34 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+    <header class="navbar">
+      <form action="/upload" method="post" enctype="multipart/form-data" >
+          <span class="btn btn-default btn-file">
+            Browse <input type="file" name="image">
+          </span>
+        <input type="submit" value="Upload your image" class="btn btn-primary">
+      </form>
+    </header>
+
+    <div class="text-center">
+        {% if success %}
+            <img src="{{ full_path }}">
+            <p>File: {{ full_path }}</p>
+            <div class="alert alert-success" style="margin-top:18px;">
+                <strong>Success!</strong> Your image was uploaded successfully
+            </div>
+            <form action="/process_image" method="post" enctype="multipart/form-data" >
+                <input type="submit" value="Process Image" class="btn btn-primary">
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="text-center">
+    {% if processed %}
+        <img src="{{ full_path }}">
+        <p>Processed file: {{ full_path }}</p>
+    {% endif %}
+    </div>
+</body>

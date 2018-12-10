@@ -15,3 +15,4 @@ optimizer:
 training:
     experiment_name: resnet152_3class
     resume: pretrained/resnet152_3class/checkpoint_00000005.pth.tar
+    debug: false

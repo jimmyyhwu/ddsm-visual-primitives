@@ -96,36 +96,27 @@ def main():
     ]))
 
     # extract features and max activations
-    features = []
+    feature_maxes = []
 
     def feature_hook(_, __, layer_output):  # args: module, input, output
-        features.extend(layer_output.data.cpu().numpy())
+        feature_map = layer_output.data.cpu().numpy()[0]
+        feature_max = feature_map.max(axis=(1, 2))
+        feature_maxes.append(feature_max)
 
     features_layer._forward_hooks.clear()
     features_layer.register_forward_hook(feature_hook)
-    prob_maps = []
 
     for _, image in tqdm(val_dataset):
         with torch.no_grad():
             input_var = Variable(image.unsqueeze(0))
-            output = model(input_var)
-            output = output.transpose(1, 3).contiguous()
-            size = output.size()[:3]
-            output = output.view(-1, output.size(3))
-            prob = nn.Softmax(dim=1)(output)
-            prob = prob.view(size[0], size[1], size[2], -1)
-            prob = prob.transpose(1, 3)
-            prob = prob.data.cpu().numpy()
-            prob_map = prob[0]
-            prob_maps.append(prob_map)
+            model(input_var)
 
     # save final fc layer weights
     params = list(model.parameters())
     weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)
 
     # rank the units by influence
-    max_activations = np.array([feature_map.max(axis=(1, 2)) for feature_map in features])
-    max_activations = np.expand_dims(max_activations, 1)
+    max_activations = np.expand_dims(feature_maxes, 1)
     weighted_max_activations = max_activations * weight_softmax
     unit_indices = np.argsort(-weighted_max_activations, axis=2)
     all_unit_indices_and_counts = []
@@ -134,7 +125,7 @@ def main():
         unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(),
                                                  return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
-        all_unit_indices_and_counts.append(unit_indices_and_counts)    
+        all_unit_indices_and_counts.append(unit_indices_and_counts)
 
     # save rankings to file
     unit_rankings_dir = os.path.join(args.output_dir, 'unit_rankings', cfg.training.experiment_name,
@@ -160,7 +151,7 @@ def main():
         print(unit_indices_and_counts[:num_units_annotated])
         annotated_count = sum(x[1] for x in unit_indices_and_counts[:num_units_annotated])
         unannotated_count = sum(x[1] for x in unit_indices_and_counts[num_units_annotated:])
-        assert annotated_count + unannotated_count == num_top_units * len(features)
+        assert annotated_count + unannotated_count == num_top_units * len(feature_maxes)
         print('percent annotated: {:.2f}%'.format(100.0 * annotated_count / (annotated_count + unannotated_count)))
         print('')
 

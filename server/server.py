@@ -4,11 +4,16 @@ from flask import Flask, render_template, request
 from flask import redirect
 import urllib
 import urllib.parse
-
+import os
 import backend
 
 app = Flask(__name__)
 
+STATIC_DIR = 'static'
+UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+PROCESSED_FOLDER = os.path.join(STATIC_DIR, 'processed')
+app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 
 @app.route('/')
 def index(name=None):
@@ -116,3 +121,23 @@ def handle_survey_full():
 @app.route('/handle_survey/ranked', methods=['POST'])
 def handle_survey_ranked():
     return handle_survey(ranked=True)
+
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['image']
+    full_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+
+    # add your custom code to check that the uploaded file is a valid image and not a malicious file (out-of-scope for this post)
+    file.save(full_path)
+
+    return render_template('single_image.html', success=True, full_path=full_path)
+
+
+@app.route('/process_image', methods=['POST'])
+def process_image():
+    processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
+    return render_template('single_image.html', success=False, processed=True, full_path=processed_path)
+
+
+
