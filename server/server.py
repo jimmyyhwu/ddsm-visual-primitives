@@ -140,4 +140,7 @@ def process_image():
     return render_template('single_image.html', success=False, processed=True, full_path=processed_path)
 
 
+@app.route('/single_image/')
+def single_image():
+    return render_template('single_image.html', success=False, processed=False, full_path='')
 
