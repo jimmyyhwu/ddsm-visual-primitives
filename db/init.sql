@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS image (
   image_path TEXT NOT NULL,
   ground_truth INTEGER NOT NULL,
   split TEXT NOT NULL,
-  FOREIGN KEY(ground_truth) REFERENCES classification(id)
+  FOREIGN KEY(ground_truth) REFERENCES class(id)
 );
 
 CREATE TABLE IF NOT EXISTS patch (
@@ -44,45 +44,55 @@ CREATE TABLE IF NOT EXISTS patch (
   image_id INTEGER NOT NULL,
   ground_truth INTEGER NOT NULL,
   FOREIGN KEY(image_id) REFERENCES  image(id),
-  FOREIGN KEY(ground_truth) REFERENCES classification(id)
+  FOREIGN KEY(ground_truth) REFERENCES class(id)
 );
 
 CREATE TABLE IF NOT EXISTS image_unit_activation (
   net_id TEXT NOT NULL,
   image_id INTEGER NOT NULL,
   unit_id INTEGER NOT NULL,
-  class INTEGER NOT NULL,
+  class_id INTEGER NOT NULL,
   activation REAL NOT NULL,
   rank INTEGER NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(image_id) REFERENCES image(id),
-  FOREIGN KEY(class) REFERENCES classification(id),
-  PRIMARY KEY(net_id, image_id, unit_id, class)
+  FOREIGN KEY(class_id) REFERENCES class(id),
+  PRIMARY KEY(net_id, image_id, unit_id, class_id)
 );
 
 CREATE TABLE IF NOT EXISTS patch_unit_activation (
   net_id TEXT NOT NULL,
   patch_id INTEGER NOT NULL,
   unit_id INTEGER NOT NULL,
-  class INTEGER NOT NULL,
+  class_id INTEGER NOT NULL,
   activation REAL NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(patch_id) REFERENCES patch(id),
-  FOREIGN KEY(class) REFERENCES classification(id),
-  PRIMARY KEY(net_id, patch_id, unit_id, class)
+  FOREIGN KEY(class_id) REFERENCES class(id),
+  PRIMARY KEY(net_id, patch_id, unit_id, class_id)
 );
 
-CREATE TABLE IF NOT EXISTS result (
+CREATE TABLE IF NOT EXISTS patch_classification (
   net_id TEXT NOT NULL,
   patch_id INTEGER NOT NULL,
-  class INTEGER NOT NULL,
+  class_id INTEGER NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(patch_id) REFERENCES patch(id),
-  FOREIGN KEY(class) REFERENCES classification(id),
+  FOREIGN KEY(class_id) REFERENCES class(id),
   PRIMARY KEY(net_id, patch_id)
 );
 
-INSERT INTO classification (
+CREATE TABLE IF NOT EXISTS image_classification (
+  net_id TEXT NOT NULL,
+  image_id INTEGER NOT NULL,
+  class_id INTEGER NOT NULL,
+  FOREIGN KEY(net_id) REFERENCES net(id),
+  FOREIGN KEY(image_id) REFERENCES image(id),
+  FOREIGN KEY(class_id) REFERENCES class(id),
+  PRIMARY KEY(net_id, image_id)
+);
+
+INSERT INTO class (
   id,
   description
 ) VALUES (
