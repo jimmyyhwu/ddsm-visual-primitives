@@ -1,4 +1,4 @@
-# do a forward pass on all patches in validation set and store results in DB
+# do a forward pass on all full images in validation set and store results in DB
 
 import argparse
 import os
