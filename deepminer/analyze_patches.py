@@ -33,7 +33,7 @@ class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, image_list_path, patch_size, transform):
         self.root = root
         with open(image_list_path, 'r') as f:
-            self.image_names = list(map(lambda line: line.strip(), f.readlines()))
+            self.image_names = [line.strip() for line in f.readlines()]
         self.patch_size = patch_size
         self.transform = transform
 
