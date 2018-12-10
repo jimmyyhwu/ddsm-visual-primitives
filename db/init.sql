@@ -19,27 +19,47 @@ CREATE TABLE IF NOT EXISTS unit_annotation (
   net_id TEXT NOT NULL,
   doctor_id INTEGER NOT NULL,
   threshold REAL,
-  descriptions TEXT NOT NULL,
+  descriptions TEXT,
+  filter INTEGER,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(doctor_id) REFERENCES doctor(id),
   PRIMARY KEY(unit_id, net_id, doctor_id)
+);
+
+CREATE TABLE IF NOT EXISTS image (
+  id INTEGER PRIMARY KEY,
+  image_path TEXT NOT NULL,
+  ground_truth INTEGER NOT NULL,
+  FOREIGN KEY(ground_truth) REFERENCES classification(id)
 );
 
 CREATE TABLE IF NOT EXISTS patch (
   id INTEGER PRIMARY KEY,
   x INTEGER NOT NULL,
   y INTEGER NOT NULL,
-  full_image TEXT NOT NULL,
+  image_path TEXT NOT NULL,
+  image_id INTEGER NOT NULL,
   ground_truth INTEGER NOT NULL,
+  FOREIGN KEY(image_id) REFERENCES  image(id),
   FOREIGN KEY(ground_truth) REFERENCES classification(id)
 );
 
- CREATE TABLE IF NOT EXISTS patch_unit_activation (
+CREATE TABLE IF NOT EXISTS image_unit_activation (
   net_id TEXT NOT NULL,
   patch_id INTEGER NOT NULL,
   unit_id INTEGER NOT NULL,
   activation REAL NOT NULL,
   rank INTEGER NOT NULL,
+  FOREIGN KEY(net_id) REFERENCES net(id),
+  FOREIGN KEY(patch_id) REFERENCES patch(id),
+  PRIMARY KEY(net_id, patch_id, unit_id)
+);
+
+CREATE TABLE IF NOT EXISTS patch_unit_activation (
+  net_id TEXT NOT NULL,
+  patch_id INTEGER NOT NULL,
+  unit_id INTEGER NOT NULL,
+  activation REAL NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(patch_id) REFERENCES patch(id),
   PRIMARY KEY(net_id, patch_id, unit_id)
