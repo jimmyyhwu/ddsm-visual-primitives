@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS image_unit_activation (
   rank INTEGER NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(image_id) REFERENCES image(id),
-  PRIMARY KEY(net_id, patch_id, unit_id)
+  PRIMARY KEY(net_id, image_id, unit_id)
 );
 
 CREATE TABLE IF NOT EXISTS patch_unit_activation (
