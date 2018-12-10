@@ -45,11 +45,11 @@ def generate_sql_insert(patches):
         select_stmt = "(SELECT id FROM image WHERE image_path = '{}')".format(patch.full_image_path)
 
         if (i + 1) < num_patches:
-            statement += "({}, {}, {}, {}, '{}', {}, {}), " \
+            statement += "({}, {}, {}, {}, '{}', {}, '{}'), " \
                 .format(patch.x, patch.y, patch.width, patch.height, patch.patch_path, patch.ground_truth,
                         patch.full_image_path, select_stmt)
         else:
-            statement += "({}, {}, {}, {}, '{}', {}, {});"\
+            statement += "({}, {}, {}, {}, '{}', {}, '{}');"\
                 .format(patch.x, patch.y, patch.width, patch.height, patch.patch_path, patch.ground_truth, patch.full_image_path, select_stmt)
     return statement
 
