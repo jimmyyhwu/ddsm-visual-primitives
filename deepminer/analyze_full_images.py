@@ -17,25 +17,11 @@ from PIL import Image
 import models.resnet
 
 
-def convert_fc_to_conv(model):
-    # we assume that the model is ResNet152
-    num_classes = 3
-    model.module.fc.cpu()
-    state_dict = model.state_dict()
-    # modify weights saved for fully connected layer to fit on new conv layer:
-    state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
-    # replace fc layer with conv layer:
-    model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
-    # apply weights of old fc layer:
-    model.load_state_dict(state_dict)
-    model.module.fc.cuda()
-
-
 class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, image_list_path, patch_size, transform):
         self.root = root
         with open(image_list_path, 'r') as f:
-            self.image_names = [line.strip() for line in f.readlines()]
+            self.image_names = [line.strip() for line in f.readlines()][:10]
         self.patch_size = patch_size
         self.transform = transform
 
@@ -55,10 +41,20 @@ class DDSM(torch.utils.data.Dataset):
         return image_name, image
 
 
-def main():
-    with open(args.config_path, 'r') as f:
-        cfg = Munch.fromYAML(f)
+def convert_fc_to_conv(resnet152_model):
+    num_classes = 3
+    resnet152_model.module.fc.cpu()
+    state_dict = resnet152_model.state_dict()
+    # modify weights saved for fully connected layer to fit on new conv layer:
+    state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
+    # replace fc layer with conv layer:
+    resnet152_model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
+    # apply weights of old fc layer:
+    resnet152_model.load_state_dict(state_dict)
+    resnet152_model.module.fc.cuda()
 
+
+def prepare_model(cfg):
     print("=> creating model '{}'".format(cfg.arch.model))
     if cfg.arch.model == 'resnet152':
         model = models.resnet.resnet152(use_avgpool=False)
@@ -68,7 +64,7 @@ def main():
         raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
 
     model = torch.nn.DataParallel(model).cuda()
-    # cudnn.benchmark = True  # finds best algorithm if all inputs have the same size
+    # cudnn.benchmark = True  # inputs have different size -> not useful
 
     resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
     resume_path = os.path.join('../training', resume_path)
@@ -82,7 +78,10 @@ def main():
         print("=> no checkpoint found at '{}'".format(resume_path))
 
     convert_fc_to_conv(model)
+    return model, features_layer
 
+
+def run_model_on_all_images(model, features_layer):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     # the network was trained with patches of 224x224, but by replacing the FC layer with a Conv layer
@@ -111,7 +110,11 @@ def main():
             input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
             model(input_var)
 
-    # save final fc layer weights
+    return max_activation_per_unit_per_input
+
+
+def create_unit_ranking(model, max_activation_per_unit_per_input):
+    # save final conv layer weights
     params = list(model.parameters())
     # params[-2].data.cpu().numpy().shape: (3, 2048, 1, 1)
     weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)  # shape: (num_classes=3, 2048)
@@ -122,7 +125,7 @@ def main():
     # with np.argsort we essentially replace activations with unit_id in sorted order
     # (unit_id equals original activation index here)
     ranked_units = np.argsort(-weighted_max_activations, axis=2)
-    all_unit_indices_and_counts = []
+    unit_id_and_count_per_class = []
     for class_index in range(cfg.arch.num_classes):
         num_top_units = 8
         # we need a list like this: (top1_img_1 ... top8_img_1, top1_img_2 ... top8_img_2, ...)
@@ -130,15 +133,21 @@ def main():
         # make each element a tuple like this: (unit_id, count of appearance in top8)
         unit_indices_and_counts = zip(*np.unique(top_units_for_each_input, return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
-        all_unit_indices_and_counts.append(unit_indices_and_counts)
+        unit_id_and_count_per_class.append(unit_indices_and_counts)
 
-    # save rankings to file
+    return unit_id_and_count_per_class, ranked_units
+
+
+def save_rankings_to_file(unit_id_and_count_per_class, args, cfg):
     unit_rankings_dir = os.path.join(args.output_dir, 'unit_rankings', cfg.training.experiment_name,
                                      args.final_layer_name)
     if not os.path.exists(unit_rankings_dir):
         os.makedirs(unit_rankings_dir)
     with open(os.path.join(unit_rankings_dir, 'rankings.pkl'), 'wb') as f:
-        pickle.dump(all_unit_indices_and_counts, f)
+        pickle.dump(unit_id_and_count_per_class, f)
+
+
+def print_statistics(ranked_units, max_activation_per_unit_per_input):
 
     print("\nSome statistics:\n")
 
@@ -162,12 +171,25 @@ def main():
         print('')
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--config_path', default='pretrained/resnet152_3class/config.yml')
-parser.add_argument('--epoch', type=int, default=5)
-parser.add_argument('--final_layer_name', default='layer4')
-parser.add_argument('--raw_image_dir', default='../data/ddsm_raw')
-parser.add_argument('--raw_image_list_path', default='../data/ddsm_raw_image_lists/val.txt')
-parser.add_argument('--output_dir', default='output/')
-args = parser.parse_args()
-main()
+def analyze_full_images(args, cfg):
+    model, features_layer = prepare_model(cfg)
+    max_activation_per_unit_per_input = run_model_on_all_images(model, features_layer)
+    unit_id_and_count_per_class, ranked_units = create_unit_ranking(model, max_activation_per_unit_per_input)
+    save_rankings_to_file(unit_id_and_count_per_class, args, cfg)
+    print_statistics(ranked_units, max_activation_per_unit_per_input)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config_path', default='pretrained/resnet152_3class/config.yml')
+    parser.add_argument('--epoch', type=int, default=5)
+    parser.add_argument('--final_layer_name', default='layer4')
+    parser.add_argument('--raw_image_dir', default='../data/ddsm_raw')
+    parser.add_argument('--raw_image_list_path', default='../data/ddsm_raw_image_lists/val.txt')
+    parser.add_argument('--output_dir', default='output/')
+    args = parser.parse_args()
+
+    with open(args.config_path, 'r') as f:
+        cfg = Munch.fromYAML(f)
+
+    analyze_full_images(args, cfg)
