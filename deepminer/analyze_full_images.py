@@ -7,7 +7,6 @@ import pickle
 import numpy as np
 import torch
 import torch.utils.data
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torchvision.transforms as transforms
 from munch import Munch
