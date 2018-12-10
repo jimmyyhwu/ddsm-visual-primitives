@@ -22,11 +22,6 @@ class DB:
         return self.__conn
 
     def __generate_tables(self, conn):
-        '''
-
-        :param conn:
-        :return:
-        '''
         with open("init.sql", "r") as generation_script:
             conn.execute("PRAGMA foreign_keys=on;")
             conn.commit()

@@ -16,7 +16,7 @@ def populate_db_with_patches(db_path, patch_path):
 
 def get_patches(patch_path):
     patches = []
-    for root, dirs, files in os.walk(patch_path, followlinks=True):  # not lazy, coud be replaced with recursive scandir()-calls
+    for root, dirs, files in os.walk(patch_path, followlinks=True):  # not lazy, could be replaced with recursive scandir()-calls
         for patch_path in files:
             patch_info = patch_path.split("_")
 
