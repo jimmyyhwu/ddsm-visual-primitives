@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS image (
   id INTEGER PRIMARY KEY,
   image_path TEXT NOT NULL,
   ground_truth INTEGER NOT NULL,
+  split TEXT NOT NULL,
   FOREIGN KEY(ground_truth) REFERENCES classification(id)
 );
 
