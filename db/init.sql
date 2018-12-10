@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS result (
   class INTEGER NOT NULL,
   FOREIGN KEY(net_id) REFERENCES net(id),
   FOREIGN KEY(patch_id) REFERENCES patch(id),
+  FOREIGN KEY(class) REFERENCES classification(id),
   PRIMARY KEY(net_id, patch_id)
-  FOREIGN KEY(class) REFERENCES classification(id)
 );
 
 INSERT INTO classification (
