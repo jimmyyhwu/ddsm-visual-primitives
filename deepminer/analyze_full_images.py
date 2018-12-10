@@ -18,13 +18,16 @@ from PIL import Image
 import models.resnet
 
 
-def replace_last_model_layer(model):
+def convert_fc_to_conv(model):
     # we assume that the model is ResNet152
     num_classes = 3
     model.module.fc.cpu()
     state_dict = model.state_dict()
+    # modify weights saved for fully connected layer to fit on new conv layer:
     state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
+    # replace fc layer with conv layer:
     model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
+    # apply weights of old fc layer:
     model.load_state_dict(state_dict)
     model.module.fc.cuda()
 
@@ -46,10 +49,10 @@ class DDSM(torch.utils.data.Dataset):
         min_dim = min(image.size)
         ratio = float(4 * self.patch_size) / min_dim
         new_size = (int(ratio * image.size[0]), int(ratio * image.size[1]))
-        image = image.resize(new_size, resample=Image.BILINEAR)
+        image = image.resize(new_size, resample=Image.BILINEAR)  # image shape is now (~1500, 896)
         image = np.asarray(image)
-        image = np.broadcast_to(np.expand_dims(image, 2), image.shape + (3,))
-        image = self.transform(image)
+        image = np.broadcast_to(np.expand_dims(image, 2), image.shape + (3,))  # image shape is now (~1500, 896, 3)
+        image = self.transform(image)  # image shape is now (3, ~1500, 896) and a it is a tensor
         return image_name, image
 
 
@@ -58,20 +61,15 @@ def main():
         cfg = Munch.fromYAML(f)
 
     print("=> creating model '{}'".format(cfg.arch.model))
-    if cfg.arch.model == 'inception_v3':
-        model = models.inception.inception_v3(use_avgpool=False, transform_input=True)
-        model.aux_logits = False
-        model.fc = nn.Linear(2048, cfg.arch.num_classes)
-        features_layer = model.Mixed_7c
-    elif cfg.arch.model == 'resnet152':
+    if cfg.arch.model == 'resnet152':
         model = models.resnet.resnet152(use_avgpool=False)
         model.fc = nn.Linear(2048, cfg.arch.num_classes)
         features_layer = model.layer4
     else:
-        raise KeyError("Unsupported model architecture: %s" % cfg.arch.model)
+        raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
 
     model = torch.nn.DataParallel(model).cuda()
-    cudnn.benchmark = True
+    # cudnn.benchmark = True  # finds best algorithm if all inputs have the same size
 
     resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
     resume_path = os.path.join('../training', resume_path)
@@ -84,45 +82,54 @@ def main():
     else:
         print("=> no checkpoint found at '{}'".format(resume_path))
 
-    # convert fc to conv
-    replace_last_model_layer(model)
+    convert_fc_to_conv(model)
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    patch_size = 299 if cfg.arch.model == 'inception_v3' else 224
+
+    # the network was trained with patches of 224x224, but by replacing the FC layer with a Conv layer
+    # we can use larger inputs (i.e. shorter dim is 4 * patch_size)
+    patch_size = 224
+
     val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, patch_size, transforms.Compose([
         transforms.ToTensor(),
         normalize,
     ]))
 
     # extract features and max activations
-    feature_maxes = []
+    max_activation_per_unit_per_input = []
 
     def feature_hook(_, __, layer_output):  # args: module, input, output
-        feature_map = layer_output.data.cpu().numpy()[0]
-        feature_max = feature_map.max(axis=(1, 2))
-        feature_maxes.append(feature_max)
+        # layer_output.date.shape: (2048, ~50, 28)
+        feature_maps = layer_output.data.cpu().numpy()[0]
+        feature_maps_maximums = feature_maps.max(axis=(1, 2))  # shape: (2048)
+        max_activation_per_unit_per_input.append(feature_maps_maximums)
 
     features_layer._forward_hooks.clear()
     features_layer.register_forward_hook(feature_hook)
 
     for _, image in tqdm(val_dataset):
         with torch.no_grad():
-            input_var = Variable(image.unsqueeze(0))
+            input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
             model(input_var)
 
     # save final fc layer weights
     params = list(model.parameters())
-    weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)
+    # params[-2].data.cpu().numpy().shape: (3, 2048, 1, 1)
+    weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)  # shape: (num_classes=3, 2048)
 
     # rank the units by influence
-    max_activations = np.expand_dims(feature_maxes, 1)
-    weighted_max_activations = max_activations * weight_softmax
-    unit_indices = np.argsort(-weighted_max_activations, axis=2)
+    max_activations = np.expand_dims(max_activation_per_unit_per_input, 1)  # shape: (input_count, 1, 2048)
+    weighted_max_activations = max_activations * weight_softmax  # shape: (input_count, num_classes=3, 2048)
+    # with np.argsort we essentially replace activations with unit_id in sorted order
+    # (unit_id equals original activation index here)
+    ranked_units = np.argsort(-weighted_max_activations, axis=2)
     all_unit_indices_and_counts = []
     for class_index in range(cfg.arch.num_classes):
         num_top_units = 8
-        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(),
-                                                 return_counts=True))
+        # we need a list like this: (top1_img_1 ... top8_img_1, top1_img_2 ... top8_img_2, ...)
+        top_units_for_each_input = ranked_units[:, class_index, :num_top_units].ravel()
+        # make each element a tuple like this: (unit_id, count of appearance in top8)
+        unit_indices_and_counts = zip(*np.unique(top_units_for_each_input, return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
         all_unit_indices_and_counts.append(unit_indices_and_counts)
 
@@ -134,13 +141,14 @@ def main():
     with open(os.path.join(unit_rankings_dir, 'rankings.pkl'), 'wb') as f:
         pickle.dump(all_unit_indices_and_counts, f)
 
-    # print some statistics
+    print("\nSome statistics:\n")
+
     for class_index in range(cfg.arch.num_classes):
         print('class index: {}'.format(class_index))
         # which units show up in the top num_top_units all the time?
         # note: unit_id == unit_index + 1
         num_top_units = 8
-        unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(),
+        unit_indices_and_counts = zip(*np.unique(ranked_units[:, class_index, :num_top_units].ravel(),
                                                  return_counts=True))
         unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
 
@@ -150,7 +158,7 @@ def main():
         print(unit_indices_and_counts[:num_units_annotated])
         annotated_count = sum(x[1] for x in unit_indices_and_counts[:num_units_annotated])
         unannotated_count = sum(x[1] for x in unit_indices_and_counts[num_units_annotated:])
-        assert annotated_count + unannotated_count == num_top_units * len(feature_maxes)
+        assert annotated_count + unannotated_count == num_top_units * len(max_activation_per_unit_per_input)
         print('percent annotated: {:.2f}%'.format(100.0 * annotated_count / (annotated_count + unannotated_count)))
         print('')
 
