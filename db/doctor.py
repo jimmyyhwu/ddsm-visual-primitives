@@ -17,11 +17,11 @@ def _insert_doctor(username, db_path='test.db'):
     conn.commit()
 
 
-def insert_doctor_if_not_exists(username, db_path='test.db'):
+def insert_doctor_into_db_if_not_exists(username, db_path='test.db'):
     if _is_doctor_existing(username, db_path):
         return
     _insert_doctor(username, db_path)
 
 
 if __name__ == "__main__":
-    insert_doctor_if_not_exists('doctorA')
+    insert_doctor_into_db_if_not_exists('doctorA')

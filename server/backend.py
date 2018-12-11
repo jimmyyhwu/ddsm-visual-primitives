@@ -3,6 +3,8 @@ import glob
 import os
 import pickle
 
+from db.doctor import insert_doctor_into_db_if_not_exists
+
 from PIL import Image
 
 STATIC_DIR = 'static'
@@ -173,3 +175,7 @@ def get_summary():
         responded_units = get_responded_units(name)
         summary.append((name, responded_units))
     return summary
+
+
+def register_doctor_if_not_exists(name):
+    insert_doctor_into_db_if_not_exists(name)
