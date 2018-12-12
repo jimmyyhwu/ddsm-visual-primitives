@@ -178,4 +178,4 @@ def get_summary():
 
 
 def register_doctor_if_not_exists(name):
-    insert_doctor_into_db_if_not_exists(name)
+    insert_doctor_into_db_if_not_exists(name, '../db/server.db')

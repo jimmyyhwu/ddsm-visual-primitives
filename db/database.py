@@ -22,7 +22,7 @@ class DB:
         return self.__conn
 
     def __generate_tables(self, conn):
-        with open("init.sql", "r") as generation_script:
+        with open("../db/init.sql", "r") as generation_script:
             conn.execute("PRAGMA foreign_keys=on;")
             conn.commit()
             conn.executescript(generation_script.read())
