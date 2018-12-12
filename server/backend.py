@@ -11,6 +11,8 @@ STATIC_DIR = 'static'
 DATA_DIR = 'data'
 LOG_DIR = os.path.join(DATA_DIR, 'log')
 
+DB_FILENAME = os.environ['DB_FILENAME'] if 'DB_FILENAME' in os.environ else 'test.db'
+
 
 def get_models_and_layers(full=False, ranked=False):
     if full:
@@ -178,4 +180,4 @@ def get_summary():
 
 
 def register_doctor_if_not_exists(name):
-    insert_doctor_into_db_if_not_exists(name, '../db/server.db')
+    insert_doctor_into_db_if_not_exists(name, DB_FILENAME, '../db/')
