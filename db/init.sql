@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS doctor (
   name TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS classification (
+CREATE TABLE IF NOT EXISTS class (
   id INTEGER PRIMARY KEY,
   description TEXT NOT NULL
 );
