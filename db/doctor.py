@@ -10,10 +10,10 @@ def _is_doctor_existing(username, db_filename, db_root):
 
 
 def _insert_doctor(username, db_filename, db_root):
-    insert_statement = "INSERT INTO doctor(name) VALUES('{}');".format(username)
+    insert_statement = "INSERT INTO doctor(name) VALUES (?)"
     db = DB(db_filename, db_root)
     conn = db.get_connection()
-    conn.execute(insert_statement)
+    conn.execute(insert_statement, (username, ))
     conn.commit()
 
 
