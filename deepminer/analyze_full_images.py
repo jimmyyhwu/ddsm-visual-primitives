@@ -46,6 +46,21 @@ class DDSM(torch.utils.data.Dataset):
         return self.image_names
 
 
+def get_dataset():
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+    # the network was trained with patches of 224x224, but by replacing the FC layer with a Conv layer
+    # we can use larger inputs (i.e. shorter dim is 4 * patch_size)
+    patch_size = 224
+
+    val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, patch_size, transforms.Compose([
+        transforms.ToTensor(),
+        normalize,
+    ]))
+
+    return val_dataset
+
+
 def convert_fc_to_conv(resnet152_model):
     num_classes = 3
     resnet152_model.module.fc.cpu()
@@ -86,18 +101,7 @@ def prepare_model(cfg):
     return model, features_layer, resume_path
 
 
-def run_model_on_all_images(model, features_layer):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-    # the network was trained with patches of 224x224, but by replacing the FC layer with a Conv layer
-    # we can use larger inputs (i.e. shorter dim is 4 * patch_size)
-    patch_size = 224
-
-    val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, patch_size, transforms.Compose([
-        transforms.ToTensor(),
-        normalize,
-    ]))
-
+def run_model_on_all_images(model, features_layer, dataset):
     # extract features and max activations
     max_activation_per_unit_per_input = []
 
@@ -110,12 +114,19 @@ def run_model_on_all_images(model, features_layer):
     features_layer._forward_hooks.clear()
     features_layer.register_forward_hook(feature_hook)
 
-    for _, image in tqdm(val_dataset):
+    classifications = []
+
+    for _, image in tqdm(dataset):
         with torch.no_grad():
             input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
-            model(input_var)
+            output = model(input_var)  # shape: [1, 3, 53, 28]
+            # output is a matrix per class -> calculate mean of matrices:
+            output = output.mean(-1).mean(-1)  # shape: [1, 3], i.e. [ 2.3673, -1.0791, -1.2985]
+            class_probs = nn.Softmax(dim=1)(output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
+            classification = np.argmax(class_probs.cpu().numpy())  # int
+            classifications.append(classification)
 
-    return max_activation_per_unit_per_input, val_dataset
+    return max_activation_per_unit_per_input, classifications
 
 
 def create_unit_ranking(model, max_activation_per_unit_per_input):
@@ -152,8 +163,8 @@ def save_rankings_to_file(unit_id_and_count_per_class, args, cfg):
         pickle.dump(unit_id_and_count_per_class, f)
 
 
-def save_activations_to_db(weighted_max_activations, val_dataset, db_path, checkpoint_path):
-    db = DB(db_path)
+def save_activations_to_db(weighted_max_activations, val_dataset, db_filename, checkpoint_path):
+    db = DB(db_filename, "../db/")
     conn = db.get_connection()
     num_classes = 3
     image_names = val_dataset.get_image_names()
@@ -185,7 +196,7 @@ def save_activations_to_db(weighted_max_activations, val_dataset, db_path, check
                 activation = max_activation_per_unit[unit_index]
                 rank = ranks[unit_index]
 
-                insert_statement = "INSERT OR REPLACE INTO image_unit_activation (net_id, image_id, unit_id, class, activation, rank) VALUES (?, ?, ?, ?, ?, ?)"
+                insert_statement = "INSERT OR REPLACE INTO image_unit_activation (net_id, image_id, unit_id, class_id, activation, rank) VALUES (?, ?, ?, ?, ?, ?)"
                 conn.execute(insert_statement, (network_hash, img_id, unit_index + 1, class_index, float(activation), int(rank)))
 
     conn.commit()
@@ -217,17 +228,21 @@ def print_statistics(ranked_units, max_activation_per_unit_per_input):
 
 def analyze_full_images(args, cfg, db_path):
     model, features_layer, checkpoint_path = prepare_model(cfg)
-    max_activation_per_unit_per_input, val_dataset = run_model_on_all_images(model, features_layer)
+    val_dataset = get_dataset()
+
+    max_activation_per_unit_per_input, classifications = run_model_on_all_images(model, features_layer, val_dataset)
     unit_id_and_count_per_class, ranked_units, weighted_max_activations = create_unit_ranking(model, max_activation_per_unit_per_input)
+
     save_rankings_to_file(unit_id_and_count_per_class, args, cfg)
     save_activations_to_db(weighted_max_activations, val_dataset, db_path, checkpoint_path)
+
     print_statistics(ranked_units, max_activation_per_unit_per_input)
 
 
 if __name__ == "__main__":
-    DB_PATH = "../db/test.db"
+    DB_FILENAME = os.environ['DB_FILENAME'] if 'DB_FILENAME' in os.environ else 'test.db'
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_path', default='pretrained/resnet152_3class/config.yml')
+    parser.add_argument('--config_path', default='../training/pretrained/resnet152_3class/config.yml')
     parser.add_argument('--epoch', type=int, default=5)
     parser.add_argument('--final_layer_name', default='layer4')
     parser.add_argument('--raw_image_dir', default='../data/ddsm_raw')
@@ -238,4 +253,4 @@ if __name__ == "__main__":
     with open(args.config_path, 'r') as f:
         cfg = Munch.fromYAML(f)
 
-    analyze_full_images(args, cfg, DB_PATH)
+    analyze_full_images(args, cfg, DB_FILENAME)
