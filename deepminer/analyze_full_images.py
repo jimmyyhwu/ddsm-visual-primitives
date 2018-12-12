@@ -61,24 +61,10 @@ def get_dataset():
     return val_dataset
 
 
-def convert_fc_to_conv(resnet152_model):
-    num_classes = 3
-    resnet152_model.module.fc.cpu()
-    state_dict = resnet152_model.state_dict()
-    # modify weights saved for fully connected layer to fit on new conv layer:
-    state_dict['module.fc.weight'] = state_dict['module.fc.weight'].view(num_classes, 2048, 1, 1)
-    # replace fc layer with conv layer:
-    resnet152_model.module.fc = nn.Conv2d(2048, num_classes, kernel_size=(1, 1))
-    # apply weights of old fc layer:
-    resnet152_model.load_state_dict(state_dict)
-    resnet152_model.module.fc.cuda()
-
-
 def prepare_model(cfg):
     print("=> creating model '{}'".format(cfg.arch.model))
     if cfg.arch.model == 'resnet152':
-        model = models.resnet.resnet152(use_avgpool=False)
-        model.fc = nn.Linear(2048, cfg.arch.num_classes)
+        model = models.resnet.resnet152(num_classes=3, use_avgpool=False, use_adaptive_avg_pooling=True)
         features_layer = model.layer4
     else:
         raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
@@ -97,7 +83,7 @@ def prepare_model(cfg):
     else:
         print("=> no checkpoint found at '{}'".format(resume_path))
 
-    convert_fc_to_conv(model)
+    # convert_fc_to_conv(model)
     return model, features_layer, resume_path
 
 
@@ -115,16 +101,27 @@ def run_model_on_all_images(model, features_layer, dataset):
     features_layer.register_forward_hook(feature_hook)
 
     classifications = []
+    correct = 0
 
+    i = 0
     for _, image in tqdm(dataset):
         with torch.no_grad():
             input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
-            output = model(input_var)  # shape: [1, 3, 53, 28]
+            output = model(input_var)  # shape: [1, 3]
             # output is a matrix per class -> calculate mean of matrices:
-            output = output.mean(-1).mean(-1)  # shape: [1, 3], i.e. [ 2.3673, -1.0791, -1.2985]
-            class_probs = nn.Softmax(dim=1)(output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
-            classification = np.argmax(class_probs.cpu().numpy())  # int
-            classifications.append(classification)
+            class_probs = nn.Softmax(dim=1)(-output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
+            classification = int(np.argmax(class_probs.cpu().numpy()))  # int
+            classifications.append("%d %s" % (classification, dataset.image_names[i][:6]))
+            if (classification == 0 and dataset.image_names[i][:6] == "normal") or \
+                    (classification == 1 and dataset.image_names[i][:6] == "benign") or \
+                    (classification == 2 and dataset.image_names[i][:6] == "cancer"):
+                correct += 1
+            i += 1
+
+    print("\n", np.unique(classifications, return_counts=True))
+    # (array(['1', '2', 'benign', 'cancer', 'normal'], dtype='<U21'), array([130, 390, 192, 184, 144]))
+
+    print("\n", "Correct classified: %d Image count: %d, Ratio: %f" % (correct, i, correct / i))
 
     return max_activation_per_unit_per_input, classifications
 
@@ -132,8 +129,8 @@ def run_model_on_all_images(model, features_layer, dataset):
 def create_unit_ranking(model, max_activation_per_unit_per_input):
     # save final conv layer weights
     params = list(model.parameters())
-    # params[-2].data.cpu().numpy().shape: (3, 2048, 1, 1)
-    weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)  # shape: (num_classes=3, 2048)
+    # params[-2].data.cpu().numpy().shape: (3, 2048)
+    weight_softmax = params[-2].data.cpu().numpy()  # shape: (num_classes=3, 2048)
 
     # rank the units by influence
     max_activations = np.expand_dims(max_activation_per_unit_per_input, 1)  # shape: (input_count, 1, 2048)
