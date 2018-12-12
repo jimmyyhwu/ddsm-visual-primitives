@@ -15,6 +15,7 @@ class DB:
     def get_connection(self):
         return self.__conn
 
+
     def __generate_tables(self):
         with open(os.path.join(self._db_root, "init.sql"), "r") as generation_script:
             self.__conn.execute("PRAGMA foreign_keys=on;")

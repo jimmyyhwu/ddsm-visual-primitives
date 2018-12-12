@@ -29,6 +29,7 @@ def summary():
 def handle_login():
     name = request.form['name']
     name = urllib.parse.quote_plus(name)
+    backend.register_doctor_if_not_exists(name)
     return redirect('/home/{}'.format(name))
 
 
