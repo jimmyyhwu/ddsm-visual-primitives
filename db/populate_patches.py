@@ -1,20 +1,17 @@
-from db.database import DB
 import os
 from collections import namedtuple
 
 Patch = namedtuple("Patch", "ground_truth x y width height patch_path full_image_path")
 
 
-def populate_db_with_patches(db_path, patch_path, patch_ground_truth):
-    patches = get_patches(patch_path, patch_ground_truth)
-    insert_statement = generate_sql_insert(patches)
-    db = DB(db_path)
-    conn = db.get_connection()
-    conn.execute(insert_statement)
-    conn.commit()
+def populate_db_with_patches(conn, patch_path, patch_list_path):
+    patch_ground_truth = _get_patches_ground_truth(patch_list_path)
+    patches = _get_patches(patch_path, patch_ground_truth)
+
+    _insert_patches_batchwise(patches, conn)
 
 
-def get_patches(patch_path, patch_ground_truth):
+def _get_patches(patch_path, patch_ground_truth):
     patches = []
     for root, dirs, files in os.walk(patch_path, followlinks=True):  # not lazy, could be replaced with recursive scandir()-calls
         for patch_path in files:
@@ -35,23 +32,24 @@ def get_patches(patch_path, patch_ground_truth):
     return patches
 
 
-def generate_sql_insert(patches):
-    num_patches = len(patches)
-    if num_patches == 0:
-        raise IndexError("No patches were given")
-
-    statement = "INSERT INTO patch (x, y, width, height, patch_path, ground_truth, image_id) VALUES "
-    for i, patch in enumerate(patches):
-        select_stmt = "(SELECT id FROM image WHERE image_path = '{}')".format(patch.full_image_path)
-
-        if (i + 1) < num_patches:
-            statement += "({}, {}, {}, {}, '{}', {}, '{}'), " \
-                .format(patch.x, patch.y, patch.width, patch.height, patch.patch_path, patch.ground_truth,
-                        patch.full_image_path, select_stmt)
-        else:
-            statement += "({}, {}, {}, {}, '{}', {}, '{}');"\
-                .format(patch.x, patch.y, patch.width, patch.height, patch.patch_path, patch.ground_truth, patch.full_image_path, select_stmt)
-    return statement
+def _insert_patches_batchwise(patches, conn, batch_size=500):
+    patch_batches = [patches[i:i+batch_size] for i in range(0, len(patches), batch_size)]
+    #print("{} batches total".format(len(patch_batches)))
+    count = 0
+    for batch in patch_batches:
+        count += 1
+        #print(count)
+        statement = "INSERT INTO patch (x, y, width, height, patch_path, ground_truth, image_id) VALUES "
+        for (i, patch) in enumerate(batch):
+            select_stmt = "(SELECT id FROM image WHERE image_path = '{}')".format(patch.full_image_path)
+            if (i + 1) < len(batch):
+                statement += "({}, {}, {}, {}, '{}', {}, {}),".format(patch.x, patch.y, patch.width, patch.height,
+                                                                      patch.patch_path, patch.ground_truth, select_stmt)
+            else:
+                statement += "({}, {}, {}, {}, '{}', {}, {});".format(patch.x, patch.y, patch.width, patch.height,
+                                                                      patch.patch_path, patch.ground_truth, select_stmt)
+        conn.execute(statement)
+    conn.commit()
 
 
 def _process_label_line(line):
@@ -71,22 +69,10 @@ def _get_patch_ground_truth_map(label_path):
     return cache
 
 
-def get_patches_ground_truth(label_path_test, label_path_val, label_path_train):
-    test_map = _get_patch_ground_truth_map(label_path_test)
-    val_map = _get_patch_ground_truth_map(label_path_val)
-    train_map = _get_patch_ground_truth_map(label_path_train)
-    test_val_map = {**test_map, **val_map}  # merge test and val
-    all_map = {**test_val_map, **train_map}  # merge combined test and val with train
-    return all_map
+def _get_patches_ground_truth(image_lists_path):
+    ground_truth_map = {}
+    for filename in [e for e in os.listdir(image_lists_path) if e.endswith(".txt")]:
+        file_path = os.path.join(image_lists_path, filename)
+        ground_truth_map = {**ground_truth_map, **_get_patch_ground_truth_map(file_path)}
+    return ground_truth_map
 
-
-
-if __name__ == "__main__":
-    PATCH_PATH = "../data/ddsm_patches/"
-    DB_PATH = "test.db"
-    GROUND_TRUTH_TEST = "../data/ddsm_3class/test.txt"
-    GROUND_TRUTH_VAL = "../data/ddsm_3class/val.txt"
-    GROUND_TRUTH_TRAIN = "../data/ddsm_3class/train.txt"
-    patch_ground_truth = get_patches_ground_truth(GROUND_TRUTH_TEST, GROUND_TRUTH_VAL, GROUND_TRUTH_TRAIN)
-
-    populate_db_with_patches(DB_PATH, PATCH_PATH, patch_ground_truth)
