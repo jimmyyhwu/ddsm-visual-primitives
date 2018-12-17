@@ -3,7 +3,10 @@
 import argparse
 import os
 import time
+import random
 from datetime import datetime
+from PIL import Image
+import numpy as np
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -16,7 +19,34 @@ from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import dataset
+
+class DDSM(torch.utils.data.Dataset):
+    def __init__(self, root, split, transform):
+        self.root = root
+        self.transform = transform
+
+        image_list = []
+        with open(os.path.join(root, '{}.txt'.format(split)), 'r') as f:
+            for line in f.readlines():
+                image_name, label = line.strip().split(' ')
+                label = int(label)
+                if label != 0 or random.random() < 1/20.0:
+                    # we are using only 1/20th of the normal images to balance the dataset better
+                    image_list.append((image_name, label))
+        self.image_list = image_list
+
+        weight = np.unique([label for _, label in self.image_list], return_counts=True)[1]
+        self.weight = 1 / (weight / np.amin(weight))
+
+    def __len__(self):
+        return len(self.image_list)
+
+    def __getitem__(self, idx):
+        image_name, label = self.image_list[idx]
+        image = Image.open(os.path.join(self.root, image_name))
+        image = image.crop([0, 0, 224, 224])
+        image = self.transform(image)
+        return image, label
 
 
 def accuracy(output, target):
@@ -184,8 +214,6 @@ def main():
     else:
         model = torch.nn.DataParallel(model).cuda()
     cudnn.benchmark = True
-
-    criterion = nn.CrossEntropyLoss().cuda()
     optimizer = torch.optim.SGD(model.parameters(),
                                 lr=cfg.optimizer.lr,
                                 momentum=cfg.optimizer.momentum,
@@ -212,14 +240,16 @@ def main():
         train_transforms.append(transforms.Scale(299))
         val_transforms.append(transforms.Scale(299))
 
-    train_dataset = dataset.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
+    train_dataset = DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))
-    val_dataset = dataset.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
+    val_dataset = DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))
+
+    criterion = nn.CrossEntropyLoss(weight=torch.from_numpy(train_dataset.weight).float()).cuda()
 
     if cfg.training.debug:
         # limit training data for debugging:
