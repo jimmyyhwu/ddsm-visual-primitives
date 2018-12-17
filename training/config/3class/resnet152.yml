@@ -19,6 +19,6 @@ training:
     print_freq: 10
     checkpoint_epochs: 1
     log_dir:
-    epochs: 2
-    debug: true
+    epochs: 100
+    debug: false
     resume:
