@@ -8,13 +8,7 @@ def populate_db_with_patches(conn, patch_path, patch_list_path):
     patch_ground_truth = _get_patches_ground_truth(patch_list_path)
     patches = _get_patches(patch_path, patch_ground_truth)
 
-    count = 0
-    for patch in patches:
-        print(count)
-        insert_statement = _generate_sql_insert(patch)
-        conn.execute(insert_statement)
-        count += 1
-    conn.commit()
+    _insert_patches_batchwise(patches, conn)
 
 
 def _get_patches(patch_path, patch_ground_truth):
@@ -38,11 +32,24 @@ def _get_patches(patch_path, patch_ground_truth):
     return patches
 
 
-def _generate_sql_insert(patch):
-    statement = "INSERT INTO patch (x, y, width, height, patch_path, ground_truth, image_id) VALUES "
-    select_stmt = "(SELECT id FROM image WHERE image_path = '{}')".format(patch.full_image_path)
-    statement += "({}, {}, {}, {}, '{}', {}, {});".format(patch.x, patch.y, patch.width, patch.height, patch.patch_path, patch.ground_truth, select_stmt)
-    return statement
+def _insert_patches_batchwise(patches, conn, batch_size=500):
+    patch_batches = [patches[i:i+batch_size] for i in range(0, len(patches), batch_size)]
+    #print("{} batches total".format(len(patch_batches)))
+    count = 0
+    for batch in patch_batches:
+        count += 1
+        #print(count)
+        statement = "INSERT INTO patch (x, y, width, height, patch_path, ground_truth, image_id) VALUES "
+        for (i, patch) in enumerate(batch):
+            select_stmt = "(SELECT id FROM image WHERE image_path = '{}')".format(patch.full_image_path)
+            if (i + 1) < len(batch):
+                statement += "({}, {}, {}, {}, '{}', {}, {}),".format(patch.x, patch.y, patch.width, patch.height,
+                                                                      patch.patch_path, patch.ground_truth, select_stmt)
+            else:
+                statement += "({}, {}, {}, {}, '{}', {}, {});".format(patch.x, patch.y, patch.width, patch.height,
+                                                                      patch.patch_path, patch.ground_truth, select_stmt)
+        conn.execute(statement)
+    conn.commit()
 
 
 def _process_label_line(line):
