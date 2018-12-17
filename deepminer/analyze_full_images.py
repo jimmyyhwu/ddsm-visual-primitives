@@ -64,7 +64,7 @@ def get_dataset():
 def prepare_model(cfg):
     print("=> creating model '{}'".format(cfg.arch.model))
     if cfg.arch.model == 'resnet152':
-        model = models.resnet.resnet152(num_classes=3, use_avgpool=False, use_adaptive_avg_pooling=True)
+        model = models.resnet.resnet152(num_classes=3)
         features_layer = model.layer4
     else:
         raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
@@ -104,22 +104,18 @@ def run_model_on_all_images(model, features_layer, dataset):
     correct = 0
 
     i = 0
-    for _, image in tqdm(dataset):
+    for image_name, image in tqdm(dataset):
         with torch.no_grad():
             input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
             output = model(input_var)  # shape: [1, 3]
-            # output is a matrix per class -> calculate mean of matrices:
-            class_probs = nn.Softmax(dim=1)(-output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
+            class_probs = nn.Softmax(dim=1)(output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
             classification = int(np.argmax(class_probs.cpu().numpy()))  # int
             classifications.append("%d %s" % (classification, dataset.image_names[i][:6]))
-            if (classification == 0 and dataset.image_names[i][:6] == "normal") or \
-                    (classification == 1 and dataset.image_names[i][:6] == "benign") or \
-                    (classification == 2 and dataset.image_names[i][:6] == "cancer"):
+            if (classification == 0 and image_name[:6] == "normal") or \
+                    (classification == 1 and image_name[:6] == "benign") or \
+                    (classification == 2 and image_name[:6] == "cancer"):
                 correct += 1
             i += 1
-
-    print("\n", np.unique(classifications, return_counts=True))
-    # (array(['1', '2', 'benign', 'cancer', 'normal'], dtype='<U21'), array([130, 390, 192, 184, 144]))
 
     print("\n", "Correct classified: %d Image count: %d, Ratio: %f" % (correct, i, correct / i))
 
