@@ -14,7 +14,7 @@ class DDSM(torch.utils.data.Dataset):
             'cancer': 2,
         }
         with open(image_list_path, 'r') as f:
-            self.images = [(line.strip(), name2class[line.strip()[:6]]) for line in f.readlines()][::15]
+            self.images = [(line.strip(), name2class[line.strip()[:6]]) for line in f.readlines()]
         self.image_names = [filename for filename, ground_truth in self.images]
         self.target_size = target_size
         self.transform = transform
