@@ -8,52 +8,64 @@ import hashlib
 import numpy as np
 import torch
 import torch.utils.data
+import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torchvision.transforms as transforms
 from munch import Munch
 from torch.autograd import Variable
 from tqdm import tqdm as tqdm
-from PIL import Image
+from PIL import Image, ImageOps
 
 import models.resnet
 from db.database import DB
 
 
 class DDSM(torch.utils.data.Dataset):
-    def __init__(self, root, image_list_path, patch_size, transform):
+    def __init__(self, root, image_list_path, target_size, transform):
         self.root = root
+        name2class = {
+            'normal': 0,
+            'benign': 1,
+            'cancer': 2,
+        }
         with open(image_list_path, 'r') as f:
-            self.image_names = [line.strip() for line in f.readlines()]
-        self.patch_size = patch_size
+            self.images = [(line.strip(), name2class[line.strip()[:6]]) for line in f.readlines()]
+        self.image_names = [filename for filename, ground_truth in self.images]
+        self.target_size = target_size
         self.transform = transform
 
+        weight = np.unique([label for _, label in self.images], return_counts=True)[1]
+        self.weight = 1 / (weight / np.amin(weight))
+
+        print(np.unique([ground_truth for filename, ground_truth in self.images], return_counts=True))
+
     def __len__(self):
-        return len(self.image_names)
+        return len(self.images)
 
     def __getitem__(self, idx):
-        image_name = self.image_names[idx]
+        image_name, ground_truth = self.images[idx]
         image = Image.open(os.path.join(self.root, image_name))
         min_dim = min(image.size)
-        ratio = float(4 * self.patch_size) / min_dim
+        ratio = self.target_size / min_dim
         new_size = (int(ratio * image.size[0]), int(ratio * image.size[1]))
         image = image.resize(new_size, resample=Image.BILINEAR)  # image shape is now (~1500, 896)
+        delta_w = self.target_size - new_size[0]
+        delta_h = self.target_size - new_size[1]
+        padding = (delta_w // 2, delta_h // 2, delta_w - (delta_w // 2), delta_h - (delta_h // 2))
+        image = ImageOps.expand(image, padding)
         image = np.asarray(image)
         image = np.broadcast_to(np.expand_dims(image, 2), image.shape + (3,))  # image shape is now (~1500, 896, 3)
         image = self.transform(image)  # image shape is now (3, ~1500, 896) and a it is a tensor
-        return image_name, image
-
-    def get_image_names(self):
-        return self.image_names
+        return image, ground_truth
 
 
 def get_dataset():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    target_size = 512
+    raw_image_dir = '../data/ddsm_raw'
+    image_list_val = '../data/ddsm_raw_image_lists/val.txt'
 
-    # the network was trained with patches of 224x224, but by replacing the FC layer with a Conv layer
-    # we can use larger inputs (i.e. shorter dim is 4 * patch_size)
-    patch_size = 224
-
-    val_dataset = DDSM(args.raw_image_dir, args.raw_image_list_path, patch_size, transforms.Compose([
+    val_dataset = DDSM(raw_image_dir, image_list_val, target_size, transforms.Compose([
         transforms.ToTensor(),
         normalize,
     ]))
@@ -63,14 +75,15 @@ def get_dataset():
 
 def prepare_model(cfg):
     print("=> creating model '{}'".format(cfg.arch.model))
-    if cfg.arch.model == 'resnet152':
-        model = models.resnet.resnet152(num_classes=3)
-        features_layer = model.layer4
-    else:
+    if not cfg.arch.model == 'resnet152':
         raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
 
+    model = models.resnet.resnet152(pretrained=cfg.arch.pretrained)
+    model.fc = nn.Linear(2048, cfg.arch.num_classes)
+    features_layer = model.layer4
+
     model = torch.nn.DataParallel(model).cuda()
-    # cudnn.benchmark = True  # inputs have different size -> not useful
+    cudnn.benchmark = True
 
     resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
     resume_path = os.path.join('../training', resume_path)
@@ -104,16 +117,13 @@ def run_model_on_all_images(model, features_layer, dataset):
     correct = 0
 
     i = 0
-    for image_name, image in tqdm(dataset):
+    for image, ground_truth in tqdm(dataset):
         with torch.no_grad():
             input_var = Variable(image.unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
             output = model(input_var)  # shape: [1, 3]
             class_probs = nn.Softmax(dim=1)(output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
             classification = int(np.argmax(class_probs.cpu().numpy()))  # int
-            classifications.append("%d %s" % (classification, dataset.image_names[i][:6]))
-            if (classification == 0 and image_name[:6] == "normal") or \
-                    (classification == 1 and image_name[:6] == "benign") or \
-                    (classification == 2 and image_name[:6] == "cancer"):
+            if classification == ground_truth:
                 correct += 1
             i += 1
 
@@ -160,7 +170,7 @@ def save_activations_to_db(weighted_max_activations, val_dataset, db_filename, c
     db = DB(db_filename, "../db/")
     conn = db.get_connection()
     num_classes = 3
-    image_names = val_dataset.get_image_names()
+    image_names = val_dataset.image_names
 
     with open(checkpoint_path, 'rb') as f:
         network_hash = hashlib.md5(f.read()).hexdigest()

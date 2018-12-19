@@ -17,7 +17,7 @@ from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import deepminer.models.resnet
+import resnet
 
 
 class DDSM(torch.utils.data.Dataset):
@@ -204,10 +204,10 @@ def main():
     print('checkpoint_dir: {}'.format(checkpoint_dir))
 
     print("=> creating model 'resnet152'")
-    model = deepminer.models.resnet.resnet152(pretrained=cfg.arch.pretrained)
+    model = resnet.resnet152(pretrained=cfg.arch.pretrained)
+    model.fc = nn.Linear(2048, cfg.arch.num_classes)
 
     model = torch.nn.DataParallel(model).cuda()
-    model.fc = nn.Linear(2048, cfg.arch.num_classes)
     cudnn.benchmark = True
     optimizer = torch.optim.SGD(model.parameters(),
                                 lr=cfg.optimizer.lr,
