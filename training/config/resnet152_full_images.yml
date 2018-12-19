@@ -20,4 +20,6 @@ training:
     log_dir:
     epochs: 100
     debug: false
+    early_stopping_mindelta: 0
+    early_stopping_patience: 5
     resume:

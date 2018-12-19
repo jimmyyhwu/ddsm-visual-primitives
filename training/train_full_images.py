@@ -206,6 +206,11 @@ def main():
 
     train_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'train'))
     val_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'val'))
+
+    best_loss = 1e15
+    wait = 0
+    min_delta = cfg.training.early_stopping_mindelta
+    patience = cfg.training.early_stopping_patience
     for epoch in range(start_epoch, cfg.training.epochs):
         lr = adjust_learning_rate(optimizer, epoch)
         train_summary_writer.add_scalar('learning_rate', lr, epoch + 1)
@@ -227,6 +232,30 @@ def main():
         val_summary_writer.add_scalar('auc0', val_auc0, epoch + 1)
         val_summary_writer.add_scalar('auc1', val_auc1, epoch + 1)
         val_summary_writer.add_scalar('auc2', val_auc2, epoch + 1)
+
+        # Early Stopping
+        current_loss = val_loss
+        if current_loss is None:
+            print("current val_loss is None")
+        else:
+            if (current_loss - best_loss) < -min_delta:
+                best_loss = current_loss
+                wait = 1
+            else:
+                if wait >= patience:
+                    print("Terminated training due to early stopping")
+                    checkpoint_path = save_checkpoint(checkpoint_dir, {
+                        'epoch': epoch + 1,
+                        'state_dict': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                    }, epoch + 1)
+                    cfg.training.log_dir = log_dir
+                    cfg.training.resume = checkpoint_path
+                    with open(os.path.join(log_dir, 'config.yml'), 'w') as f:
+                        f.write(cfg.toYAML())
+                    print("Checkpoint written: " + checkpoint_path)
+                    return  # stop training
+                wait += 1
 
         if (epoch + 1) % cfg.training.checkpoint_epochs == 0:
             checkpoint_path = save_checkpoint(checkpoint_dir, {
