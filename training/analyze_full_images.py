@@ -48,6 +48,7 @@ def run_model_on_all_images(model, features_layer, dataset):
             output = model(input_var)  # shape: [1, 3]
             class_probs = nn.Softmax(dim=1)(output).squeeze(0)  # shape: [3], i.e. [0.9457, 0.0301, 0.0242]
             classification = int(np.argmax(class_probs.cpu().numpy()))  # int
+            classifications.append(classification)
             if classification == ground_truth:
                 correct += 1
             i += 1
@@ -91,7 +92,7 @@ def save_rankings_to_file(unit_id_and_count_per_class, args, cfg):
         pickle.dump(unit_id_and_count_per_class, f)
 
 
-def save_activations_to_db(weighted_max_activations, val_dataset, db_filename, checkpoint_path):
+def save_activations_to_db(weighted_max_activations, classifications, val_dataset, db_filename, checkpoint_path):
     db = DB(db_filename, "../db/")
     conn = db.get_connection()
     num_classes = 3
@@ -103,22 +104,30 @@ def save_activations_to_db(weighted_max_activations, val_dataset, db_filename, c
     insert_statement_net = "INSERT OR REPLACE INTO net (id, net, filename) VALUES (?, ?, ?)"
     conn.execute(insert_statement_net, (network_hash, 'resnet152', checkpoint_path))
 
+    image_ids = []
+
+    for image_index, classification in enumerate(classifications):
+        image_name = image_names[image_index]
+        select_stmt_img = "SELECT id FROM image WHERE image_path = ?"
+        c = conn.cursor()
+        c.execute(select_stmt_img, (image_name,))
+        row = c.fetchone()
+        if row is None:
+            print("Error: Image is not in database: %s" % image_name)
+            break
+        img_id = row[0]
+        image_ids.append(img_id)
+
+        insert_statement = "INSERT OR REPLACE INTO image_classification (net_id, image_id, class_id) VALUES (?, ?, ?)"
+        conn.execute(insert_statement, (network_hash, img_id, classification))
+
     for class_index in range(num_classes):
         for image_index in range(len(image_names)):
-            image_name = image_names[image_index]
             max_activation_per_unit = weighted_max_activations[image_index, class_index]
             temp = max_activation_per_unit.argsort()
             ranks = np.empty_like(temp)
             ranks[temp] = np.arange(len(max_activation_per_unit))
-
-            select_stmt_img = "SELECT id FROM image WHERE image_path = ?"
-            c = conn.cursor()
-            c.execute(select_stmt_img, (image_name,))
-            row = c.fetchone()
-            if row is None:
-                print("Error: Image is not in database: %s" % image_name)
-                break
-            img_id = row[0]
+            img_id = image_ids[image_index]
 
             for unit_index in range(len(max_activation_per_unit)):
                 activation = max_activation_per_unit[unit_index]
@@ -162,7 +171,7 @@ def analyze_full_images(args, cfg, db_path):
     unit_id_and_count_per_class, ranked_units, weighted_max_activations = create_unit_ranking(model, max_activation_per_unit_per_input)
 
     save_rankings_to_file(unit_id_and_count_per_class, args, cfg)
-    save_activations_to_db(weighted_max_activations, val_dataset, db_path, checkpoint_path)
+    save_activations_to_db(weighted_max_activations, classifications, val_dataset, db_path, checkpoint_path)
 
     print_statistics(ranked_units, max_activation_per_unit_per_input)
 
