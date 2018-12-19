@@ -4,56 +4,17 @@ import argparse
 import os
 import time
 from datetime import datetime
-from PIL import Image, ImageOps
-import numpy as np
 
 import torch
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torchnet
-import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
 from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import resnet
-
-
-class DDSM(torch.utils.data.Dataset):
-    def __init__(self, root, image_list_path, target_size, transform):
-        self.root = root
-        name2class = {
-            'normal': 0,
-            'benign': 1,
-            'cancer': 2,
-        }
-        with open(image_list_path, 'r') as f:
-            self.images = [(line.strip(), name2class[line.strip()[:6]]) for line in f.readlines()]
-        self.target_size = target_size
-        self.transform = transform
-
-        weight = np.unique([label for _, label in self.images], return_counts=True)[1]
-        self.weight = 1 / (weight / np.amin(weight))
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        image_name, ground_truth = self.images[idx]
-        image = Image.open(os.path.join(self.root, image_name))
-        min_dim = min(image.size)
-        ratio = self.target_size / min_dim
-        new_size = (int(ratio * image.size[0]), int(ratio * image.size[1]))
-        image = image.resize(new_size, resample=Image.BILINEAR)  # image shape is now (~1500, 896)
-        delta_w = self.target_size - new_size[0]
-        delta_h = self.target_size - new_size[1]
-        padding = (delta_w // 2, delta_h // 2, delta_w - (delta_w // 2), delta_h - (delta_h // 2))
-        image = ImageOps.expand(image, padding)
-        image = np.asarray(image)
-        image = np.broadcast_to(np.expand_dims(image, 2), image.shape + (3,))  # image shape is now (~1500, 896, 3)
-        image = self.transform(image)  # image shape is now (3, ~1500, 896) and a it is a tensor
-        return image, ground_truth
+from dataset import DDSM
+from models.resnet_3class import get_resnet152_3class_model
 
 
 def accuracy(output, target):
@@ -203,45 +164,25 @@ def main():
     print('log_dir: {}'.format(log_dir))
     print('checkpoint_dir: {}'.format(checkpoint_dir))
 
-    print("=> creating model 'resnet152'")
-    model = resnet.resnet152(pretrained=cfg.arch.pretrained)
-    model.fc = nn.Linear(2048, cfg.arch.num_classes)
-
-    model = torch.nn.DataParallel(model).cuda()
-    cudnn.benchmark = True
-    optimizer = torch.optim.SGD(model.parameters(),
-                                lr=cfg.optimizer.lr,
-                                momentum=cfg.optimizer.momentum,
-                                weight_decay=cfg.optimizer.weight_decay)
-
-    start_epoch = 0
+    checkpoint_path = None
     if cfg.training.resume is not None:
         if os.path.isfile(cfg.training.resume):
-            print("=> loading checkpoint '{}'".format(cfg.training.resume))
-            checkpoint = torch.load(cfg.training.resume)
-            start_epoch = checkpoint['epoch']
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            print("=> loaded checkpoint '{}' (epoch {})".format(cfg.training.resume, checkpoint['epoch']))
+            checkpoint_path = cfg.training.resume
         else:
             print("=> no checkpoint found at '{}'".format(cfg.training.resume))
             print('')
             raise Exception
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    target_size = 512
-    raw_image_dir = '../data/ddsm_raw'
-    image_list_train = '../data/ddsm_raw_image_lists/train.txt'
-    image_list_val = '../data/ddsm_raw_image_lists/val.txt'
+    model, start_epoch, optimizer_state, features_layer = get_resnet152_3class_model(checkpoint_path)
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr=cfg.optimizer.lr,
+                                momentum=cfg.optimizer.momentum,
+                                weight_decay=cfg.optimizer.weight_decay)
+    if optimizer_state:
+        optimizer.load_state_dict(optimizer_state)
 
-    train_dataset = DDSM(raw_image_dir, image_list_train, target_size, transforms.Compose([
-        transforms.ToTensor(),
-        normalize,
-    ]))
-    val_dataset = DDSM(raw_image_dir, image_list_val, target_size, transforms.Compose([
-        transforms.ToTensor(),
-        normalize,
-    ]))
+    train_dataset = DDSM.create_full_image_dataset('train')
+    val_dataset = DDSM.create_full_image_dataset('val')
 
     criterion = nn.CrossEntropyLoss(weight=torch.from_numpy(train_dataset.weight).float()).cuda()
 
