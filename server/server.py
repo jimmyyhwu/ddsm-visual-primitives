@@ -92,15 +92,20 @@ def survey_ranked(name, model, layer, unit):
 
 @app.route('/handle_survey', methods=['POST'])
 def handle_survey(full=False, ranked=False):
-    name = request.form['name']
-    model = request.form['model']
-    layer = request.form['layer']
-    unit = request.form['unit']
-    data = {q: response for q, response in request.form.iteritems()}
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.%f')
-    data['timestamp'] = timestamp
-    backend.log_response(data)
-    backend.store_response(name, model, layer, unit, data)
+    response_data = dict(request.form)  # create a mutable dictionary copy
+    response_data['timestamp'] = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.%f')
+    backend.log_response(response_data)
+
+    name = request.form['name']  # doctor username
+    model = request.form['model']  # resnet152
+    layer = request.form['layer']  # layer4
+    unit = request.form['unit']   #unit_0076
+    q1 = request.form['q1']
+    q2 = request.form['q2']
+    q3 = request.form['q3']
+    q4 = request.form['q4']
+    answers = (q1, q2, q3, q4)
+    backend.store_response(name, model, layer, unit, answers, response_data)
     if ranked:
         return redirect('/overview/ranked/{}/{}/{}#{}'.format(name, model, layer, unit))
     elif full:
