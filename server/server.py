@@ -6,6 +6,13 @@ import urllib
 import urllib.parse
 import os
 import backend
+import subprocess
+import sys
+from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
+sys.path.insert(0, '../deepminer')
+import analyze_full_images
 
 app = Flask(__name__)
 
@@ -14,6 +21,8 @@ UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 PROCESSED_FOLDER = os.path.join(STATIC_DIR, 'processed')
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
+PROCESSED_FOLDER = os.path.join(STATIC_DIR, 'activation_maps')
+app.config['ACTIVATIONS_FOLDER'] = PROCESSED_FOLDER
 
 @app.route('/')
 def index(name=None):
@@ -136,8 +145,31 @@ def upload_file():
 
 @app.route('/process_image', methods=['POST'])
 def process_image():
+    original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    return render_template('single_image.html', success=False, processed=True, full_path=processed_path)
+    top_units_and_activations = analyze_full_images.analyze_one_image()
+
+    activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
+
+    activation_map = top_units_and_activations[0][2] # activation map for unit 0 => top unit
+    print(activation_map)
+
+    # resize activation map to img size
+    img = Image.open(original_path)
+    basewidth = img.size[0]
+    wpercent = (basewidth / float(len(activation_map[0])))
+    hsize = int((float(len(activation_map[1])) * float(wpercent)))
+
+    activation_map_resized = np.resize(activation_map, (basewidth, hsize))
+    plt.imsave(activation_map_path, activation_map_resized)
+
+    activations_overlayed_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'benign.jpg')
+    img.save(activations_overlayed_path)
+
+
+    return render_template('single_image.html', success=False, processed=True, full_path=processed_path,
+                           top_units_and_activations=top_units_and_activations,
+                           activation_map_path=activation_map_path, activations_overlayed_path=activations_overlayed_path)
 
 
 @app.route('/single_image/')

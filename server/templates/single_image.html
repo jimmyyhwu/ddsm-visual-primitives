@@ -29,6 +29,13 @@
     {% if processed %}
         <img src="{{ full_path }}">
         <p>Processed file: {{ full_path }}</p>
+
+        <div class="alert alert-success" style="margin-top:18px;">
+            <p>Top units that activated for this image:</p>
+            {% for unit in top_units_and_activations %}
+                <p>{{ unit[0] }} <img src="{{ activation_map_path }}"><img src="{{ activations_overlayed_path }}"></p>
+            {% endfor %}
+        </div>
     {% endif %}
     </div>
 </body>

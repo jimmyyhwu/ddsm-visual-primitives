@@ -7,7 +7,7 @@ from PIL import Image
 
 STATIC_DIR = 'static'
 DATA_DIR = 'data'
-
+LOG_DIR = os.path.join(DATA_DIR, 'log')
 
 def get_models_and_layers(full=False, ranked=False):
     if full:
