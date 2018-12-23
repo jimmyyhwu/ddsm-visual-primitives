@@ -1,4 +1,4 @@
-# classification into (no cancer / benign / cancer)
+# classification into (no cancer / benign / cancer) on full images
 
 import argparse
 import os
@@ -6,17 +6,15 @@ import time
 from datetime import datetime
 
 import torch
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torchnet
-import torchvision.models as models
-import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
 from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import dataset
+from dataset import DDSM
+from models.resnet_3class import get_resnet152_3class_model
 
 
 def accuracy(output, target):
@@ -157,6 +155,8 @@ def main():
     else:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.%f')
         log_dir = os.path.join(cfg.training.logs_dir, '{}_{}'.format(timestamp, cfg.training.experiment_name))
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
         checkpoint_dir = os.path.join(cfg.training.checkpoints_dir,
                                       '{}_{}'.format(timestamp, cfg.training.experiment_name))
         if not os.path.exists(checkpoint_dir):
@@ -164,62 +164,27 @@ def main():
     print('log_dir: {}'.format(log_dir))
     print('checkpoint_dir: {}'.format(checkpoint_dir))
 
-    print("=> creating model '{}'".format(cfg.arch.model))
-    model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
-
-    if cfg.arch.model.startswith('alexnet') or cfg.arch.model.startswith('vgg'):
-        # noinspection PyProtectedMember
-        model.classifier._modules['6'] = nn.Linear(4096, cfg.arch.num_classes)
-    elif cfg.arch.model == 'inception_v3':
-        model.aux_logits = False
-        model.fc = nn.Linear(2048, cfg.arch.num_classes)
-    elif cfg.arch.model == 'resnet152':
-        model.fc = nn.Linear(2048, cfg.arch.num_classes)
-    else:
-        raise Exception
-
-    if cfg.arch.model.startswith('alexnet') or cfg.arch.model.startswith('vgg'):
-        model.features = torch.nn.DataParallel(model.features)
-        model.cuda()
-    else:
-        model = torch.nn.DataParallel(model).cuda()
-    cudnn.benchmark = True
-
-    criterion = nn.CrossEntropyLoss().cuda()
-    optimizer = torch.optim.SGD(model.parameters(),
-                                lr=cfg.optimizer.lr,
-                                momentum=cfg.optimizer.momentum,
-                                weight_decay=cfg.optimizer.weight_decay)
-
-    start_epoch = 0
+    checkpoint_path = None
     if cfg.training.resume is not None:
         if os.path.isfile(cfg.training.resume):
-            print("=> loading checkpoint '{}'".format(cfg.training.resume))
-            checkpoint = torch.load(cfg.training.resume)
-            start_epoch = checkpoint['epoch']
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            print("=> loaded checkpoint '{}' (epoch {})".format(cfg.training.resume, checkpoint['epoch']))
+            checkpoint_path = cfg.training.resume
         else:
             print("=> no checkpoint found at '{}'".format(cfg.training.resume))
             print('')
             raise Exception
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    train_transforms = []
-    val_transforms = []
-    if cfg.arch.model == 'inception_v3':
-        train_transforms.append(transforms.Scale(299))
-        val_transforms.append(transforms.Scale(299))
+    model, start_epoch, optimizer_state, features_layer = get_resnet152_3class_model(checkpoint_path)
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr=cfg.optimizer.lr,
+                                momentum=cfg.optimizer.momentum,
+                                weight_decay=cfg.optimizer.weight_decay)
+    if optimizer_state:
+        optimizer.load_state_dict(optimizer_state)
 
-    train_dataset = dataset.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
-        transforms.ToTensor(),
-        normalize,
-    ]))
-    val_dataset = dataset.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
-        transforms.ToTensor(),
-        normalize,
-    ]))
+    train_dataset = DDSM.create_full_image_dataset('train')
+    val_dataset = DDSM.create_full_image_dataset('val')
+
+    criterion = nn.CrossEntropyLoss(weight=torch.from_numpy(train_dataset.weight).float()).cuda()
 
     if cfg.training.debug:
         # limit training data for debugging:
@@ -241,6 +206,11 @@ def main():
 
     train_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'train'))
     val_summary_writer = SummaryWriter(log_dir=os.path.join(log_dir, 'val'))
+
+    best_loss = 1e15
+    wait = 0
+    min_delta = cfg.training.early_stopping_mindelta
+    patience = cfg.training.early_stopping_patience
     for epoch in range(start_epoch, cfg.training.epochs):
         lr = adjust_learning_rate(optimizer, epoch)
         train_summary_writer.add_scalar('learning_rate', lr, epoch + 1)
@@ -262,6 +232,30 @@ def main():
         val_summary_writer.add_scalar('auc0', val_auc0, epoch + 1)
         val_summary_writer.add_scalar('auc1', val_auc1, epoch + 1)
         val_summary_writer.add_scalar('auc2', val_auc2, epoch + 1)
+
+        # Early Stopping
+        current_loss = val_loss
+        if current_loss is None:
+            print("current val_loss is None")
+        else:
+            if (current_loss - best_loss) < -min_delta:
+                best_loss = current_loss
+                wait = 1
+            else:
+                if wait >= patience:
+                    print("Terminated training due to early stopping")
+                    checkpoint_path = save_checkpoint(checkpoint_dir, {
+                        'epoch': epoch + 1,
+                        'state_dict': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                    }, epoch + 1)
+                    cfg.training.log_dir = log_dir
+                    cfg.training.resume = checkpoint_path
+                    with open(os.path.join(log_dir, 'config.yml'), 'w') as f:
+                        f.write(cfg.toYAML())
+                    print("Checkpoint written: " + checkpoint_path)
+                    return  # stop training
+                wait += 1
 
         if (epoch + 1) % cfg.training.checkpoint_epochs == 0:
             checkpoint_path = save_checkpoint(checkpoint_dir, {

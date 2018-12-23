@@ -1,6 +1,5 @@
 data:
-    root: ../data/ddsm_3class
-    batch_size: 32
+    batch_size: 4
     workers: 4
 arch:
     num_classes: 3
@@ -13,12 +12,14 @@ optimizer:
     momentum: 0.9
     weight_decay: 0.0001
 training:
-    logs_dir: logs
-    checkpoints_dir: checkpoints
+    logs_dir: logs_full_images
+    checkpoints_dir: checkpoints_full_images
     experiment_name: resnet152
     print_freq: 10
     checkpoint_epochs: 1
     log_dir:
-    epochs: 2
-    debug: true
+    epochs: 100
+    debug: false
+    early_stopping_mindelta: 0
+    early_stopping_patience: 5
     resume:

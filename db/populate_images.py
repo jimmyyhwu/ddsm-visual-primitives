@@ -1,4 +1,3 @@
-from db.database import DB
 import os
 from collections import namedtuple
 
@@ -10,22 +9,23 @@ ground_truth_2_idx = {
     "cancer": 2
 }
 
-def check_that_image_table_empty(conn):
+
+def _check_that_image_table_empty(conn):
     c = conn.cursor()
     c.execute("SELECT * FROM image;")
     if c.fetchone() is not None:
         raise FileExistsError("The `image` table is already populated.")
 
-def populate_db_with_images(db_path, image_lists_path):
-    db = DB(db_path)
-    conn = db.get_connection()
-    check_that_image_table_empty(conn)
-    images = get_images(image_lists_path)
-    insert_statement = generate_sql_insert(images)
+
+def populate_db_with_images(conn, image_lists_path):
+    _check_that_image_table_empty(conn)
+    images = _get_images(image_lists_path)
+    insert_statement = _generate_sql_insert(images)
     conn.execute(insert_statement)
     conn.commit()
 
-def get_images(image_lists_path):
+
+def _get_images(image_lists_path):
     '''
     :param image_lists_path:
     :return:
@@ -48,7 +48,8 @@ def get_images(image_lists_path):
 
     return images
 
-def generate_sql_insert(images):
+
+def _generate_sql_insert(images):
     '''
 
     :param images:
@@ -68,8 +69,3 @@ def generate_sql_insert(images):
     sql += ";"
 
     return sql
-
-if __name__ == "__main__":
-    DB_PATH = "test.db"
-    IMAGE_LISTS_PATH = os.path.join("..", "data", "ddsm_raw_image_lists")
-    populate_db_with_images(DB_PATH, IMAGE_LISTS_PATH)

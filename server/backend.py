@@ -3,11 +3,16 @@ import glob
 import os
 import pickle
 
+from db.doctor import insert_doctor_into_db_if_not_exists
+from db.database import DB
+
 from PIL import Image
 
 STATIC_DIR = 'static'
 DATA_DIR = 'data'
 LOG_DIR = os.path.join(DATA_DIR, 'log')
+
+DB_FILENAME = os.environ['DB_FILENAME'] if 'DB_FILENAME' in os.environ else 'test.db'
 
 def get_models_and_layers(full=False, ranked=False):
     if full:
@@ -151,7 +156,8 @@ def get_num_responses(name):
     return len(get_responses(name).keys())
 
 
-def store_response(name, model, layer, unit, data):
+def store_response(name, model, layer, unit, answers, data):
+    # keep deepminer frontend working
     responses = get_responses(name)
     key = '{}/{}/{}'.format(model, layer, unit)
     responses[key] = data
@@ -161,6 +167,26 @@ def store_response(name, model, layer, unit, data):
         os.makedirs(DATA_DIR)
     with open(data_path, 'wb') as f:
         pickle.dump(responses, f)
+
+    # write unit annotation into dabase
+    if answers[0] == 'no':  # does not show visible phenomena, we dont store anything
+        return
+    db = DB(DB_FILENAME, '../db/')
+    conn = db.get_connection()
+
+    select_unit = int(unit.split("_")[1])  # looks like: unit_0076
+    select_net = "(SELECT id FROM net WHERE net = '{}')".format(model)
+    select_doctor = "(SELECT id FROM doctor WHERE name = '{}')".format(name)
+
+    # try updating first
+    update_stmt = "UPDATE unit_annotation SET descriptions = descriptions || '{}' WHERE " \
+            "unit_id = {} AND net_id = {} AND doctor_id = {};".format(answers[3], select_unit, select_net, select_doctor)
+    conn.execute(update_stmt)
+    # make sure it exists
+    insert_stmt = "INSERT OR IGNORE INTO unit_annotation(unit_id, net_id, doctor_id, descriptions) " \
+           "VALUES ({}, {}, {}, '{}');".format(select_unit, select_net, select_doctor, answers[3])
+    conn.execute(insert_stmt)
+    conn.commit()
 
 
 def get_summary():
@@ -172,4 +198,7 @@ def get_summary():
         responded_units = get_responded_units(name)
         summary.append((name, responded_units))
     return summary
+
+def register_doctor_if_not_exists(name):
+    insert_doctor_into_db_if_not_exists(name, DB_FILENAME, '../db/')
 
