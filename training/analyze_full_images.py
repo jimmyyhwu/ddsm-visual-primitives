@@ -9,12 +9,16 @@ import numpy as np
 import torch
 import torch.utils.data
 import torch.nn as nn
+import torchvision.transforms as transforms
 from munch import Munch
 from torch.autograd import Variable
 from tqdm import tqdm as tqdm
-
+from PIL import Image
 from dataset import DDSM
 from models.resnet_3class import get_resnet152_3class_model
+
+import sys
+sys.path.insert(0,'..')
 from db.database import DB
 
 
@@ -140,7 +144,6 @@ def save_activations_to_db(weighted_max_activations, classifications, val_datase
 
 
 def print_statistics(ranked_units, max_activation_per_unit_per_input):
-
     print("\nSome statistics:\n")
 
     for class_index in range(cfg.arch.num_classes):
@@ -161,38 +164,36 @@ def print_statistics(ranked_units, max_activation_per_unit_per_input):
         assert annotated_count + unannotated_count == num_top_units * len(max_activation_per_unit_per_input)
         print('percent annotated: {:.2f}%'.format(100.0 * annotated_count / (annotated_count + unannotated_count)))
         print('')
-    
+
+
+class IMAGE(torch.utils.data.Dataset):
+    def __init__(self, image_name, image_path, patch_size, transform):
+        self.image_name = image_name
+        self.image_path = image_path
+        self.patch_size = patch_size
+        self.transform = transform
+
+    def getitem(self):
+        print("open " + os.path.join(self.image_path, self.image_name))
+        image = Image.open(os.path.join(self.image_path, self.image_name))
+        min_dim = min(image.size)
+        ratio = float(4 * self.patch_size) / min_dim
+        new_size = (int(ratio * image.size[0]), int(ratio * image.size[1]))
+        image = image.resize(new_size, resample=Image.BILINEAR)  # image shape is now (~1500, 896)
+
+        image = np.asarray(image)
+
+        # image = np.broadcast_to(np.expand_dims(image, 2), image.shape + (3,))  # image shape is now (~1500, 896, 3)  --> already is 3-dimensional?!
+
+        print("Shape of the image: " + str(image.shape))
+        image = self.transform(image)  # image shape is now (3, ~1500, 896) and a it is a tensor
+        return image
+
 
 def prepare_resnet():
-    epoch = 5
-    with open('../training/pretrained/resnet152_3class/config.yml', 'r') as f:
-        cfg = Munch.fromYAML(f)
-    print("=> creating model '{}'".format(cfg.arch.model))
-    if cfg.arch.model == 'resnet152':
-        model = models.resnet.resnet152(use_avgpool=False)
-        model.fc = nn.Linear(2048, cfg.arch.num_classes)
-        features_layer = model.layer4
-    else:
-        raise KeyError("Only ResNet152 is supported, not %s" % cfg.arch.model)
-
-    model = torch.nn.DataParallel(model).cuda()
-    # cudnn.benchmark = True  # inputs have different size -> not useful
-
-    resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(epoch))
-    resume_path = os.path.join('../training', resume_path)
-    if os.path.isfile(resume_path):
-        print("=> loading checkpoint '{}'".format(resume_path))
-        checkpoint = torch.load(resume_path)
-        model.load_state_dict(checkpoint['state_dict'])
-        model.eval()
-        print("=> loaded checkpoint '{}' (epoch {})".format(resume_path, checkpoint['epoch']))
-    else:
-        print("=> no checkpoint found at '{}'".format(resume_path))
-
-    convert_fc_to_conv(model)
-    return model, features_layer, resume_path
-
-
+    resume_path = '../training/pretrained/resnet152_3class/checkpoint_resnet152_deepminer_epoch_50.pth'
+    model, epoch, optimizer_state, features_layer = get_resnet152_3class_model(resume_path)
+    return model, features_layer
 
 
 def run_image_through_model(model, features_layer, image_name, image_path):
@@ -212,12 +213,12 @@ def run_image_through_model(model, features_layer, image_name, image_path):
     print("run image through model")
     # extract features and max activations
     max_activations_per_unit = []
-    feature_maps = np.empty([2048, 28, 28])    # initialise for 2048 units, 28x28 images
+    feature_maps_var = []
 
     def feature_hook(_, __, layer_output):  # args: module, input, output
-        # layer_output.date.shape: (2048, ~50, 28)
+        # layer_output.data.shape: (2048, ~50, 28)
         feature_maps = layer_output.data.cpu().numpy()[0]
-        print(feature_maps.shape)
+        feature_maps_var.append(feature_maps)
         feature_maps_maximums = feature_maps.max(axis=(1, 2))  # shape: (2048)  //only the max value of one activation matrix. This allows to sort them in a list
         max_activations_per_unit.append(feature_maps_maximums)
 
@@ -226,11 +227,10 @@ def run_image_through_model(model, features_layer, image_name, image_path):
 
     with torch.no_grad():
         input_var = Variable(image.getitem().unsqueeze(0))  # unsqueeze: (3, ~1500, 896) -> (1, 3, ~1500, 896)
-        model(input_var)                          # forward pass with hooks
+        model(input_var)                                    # forward pass with hooks
 
     print("saved max activations per unit")
-
-    return max_activations_per_unit, feature_maps, image
+    return max_activations_per_unit, feature_maps_var[0]
 
 
 def create_unit_ranking_for_one_image(model, max_activations_per_unit, feature_maps):
@@ -238,7 +238,10 @@ def create_unit_ranking_for_one_image(model, max_activations_per_unit, feature_m
     # save final conv layer weights
     params = list(model.parameters())
     # params[-2].data.cpu().numpy().shape: (3, 2048, 1, 1)
-    weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)  # shape: (num_classes=3, 2048)
+
+    #  weight_softmax = params[-2].data.cpu().numpy().squeeze(3).squeeze(2)  # shape: (num_classes=3, 2048)
+
+    weight_softmax = params[-2].data.cpu().numpy()
 
     # rank the units by influence
     max_activations = np.expand_dims(max_activations_per_unit, 1)  # shape: (input_count, 1, 2048)
@@ -246,44 +249,27 @@ def create_unit_ranking_for_one_image(model, max_activations_per_unit, feature_m
     weighted_max_activations = max_activations * weight_softmax  # shape: (input_count, num_classes=3, 2048)
     # with np.argsort we essentially replace activations with unit_id in sorted order
     # (unit_id equals original activation index here)
-    print(weighted_max_activations.shape)
 
-
-   # ranked_units = np.argsort(-weighted_max_activations, axis=2)
-
-    weighted_max_activations = np.squeeze(weighted_max_activations) #take away input_count dimension (only one image)
+    weighted_max_activations = np.squeeze(weighted_max_activations)  # take away input_count dimension (only one image)
 
     units_and_activations = []
 
     for idx, val in enumerate(weighted_max_activations.T):         # 2048, number of units
         units_and_activations.append((idx, val, feature_maps[idx]))
 
-   # print(units_and_activations[2000])
-    # unit_id_and_count_per_class = []
-    # for class_index in range(cfg.arch.num_classes):
-    #     num_top_units = 8
-    #     # we need a list like this: (top1_img_1 ... top8_img_1, top1_img_2 ... top8_img_2, ...)
-    #     top_units_for_each_input = ranked_units[:, class_index, :num_top_units].ravel()
-    #     # make each element a tuple like this: (unit_id, count of appearance in top8)
-    #     unit_indices_and_counts = zip(*np.unique(top_units_for_each_input, return_counts=True))
-    #     unit_indices_and_counts = sorted(unit_indices_and_counts, key=lambda x: -x[1])
-    #     unit_id_and_count_per_class.append(unit_indices_and_counts)
-
     return units_and_activations
 
 
     # diagnosis: 0 = normal, 1 = benign, 2 = malignant
 def return_top_units(units_and_activations, diagnosis = 2, numberOfUnits = 20):
-    ranked_units_and_activations = []
+    # ranked_units_and_activations = []
 
     print("Sort for top", numberOfUnits, "units")
     ranked_units_and_activations = sorted(units_and_activations, key=lambda x: x[1][diagnosis], reverse=True)[:numberOfUnits]
 
     for idx, val in enumerate(ranked_units_and_activations):
         print(idx, val[0])
-    print(ranked_units_and_activations[0][0])
-    print(ranked_units_and_activations[0][2])
-    # unit, array[0,1,2], activation_map for the unit
+    # shape: unit_name, diagnosis[0,1,2], activation_map for the unit
     return ranked_units_and_activations
 
 
@@ -300,9 +286,9 @@ def analyze_full_images(args, cfg, db_path):
     print_statistics(ranked_units, max_activation_per_unit_per_input)
 
 
-def analyze_one_image():
-    model, features_layer, checkpoint_path = prepare_resnet()
-    max_activations_per_unit, feature_maps_all, image = run_image_through_model(model, features_layer, 'benign.jpg', '../server/static/uploads')
+def analyze_one_image(image_name):
+    model, features_layer = prepare_resnet()
+    max_activations_per_unit, feature_maps_all = run_image_through_model(model, features_layer, image_name, '../server/static/uploads')
     units_and_activations = create_unit_ranking_for_one_image(model, max_activations_per_unit, feature_maps_all)
     top_units_and_activations = return_top_units(units_and_activations, 2, 10)
     return top_units_and_activations

@@ -154,20 +154,20 @@ def upload_file():
 def process_image():
     original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    top_units_and_activations = analyze_full_images.analyze_one_image()
+    top_units_and_activations = analyze_full_images.analyze_one_image(image_name='benign.jpg')
 
     activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
 
-    activation_map = top_units_and_activations[0][2] # activation map for unit 0 => top unit
-    print(activation_map)
+    activation_map = top_units_and_activations[0][2]  # activation map for unit 0 => top unit
+
+    img = Image.open(original_path)
+    # normalize activation values between 0 and 255
+    activation_map_normalized = backend.normalize_activation_map(activation_map)
 
     # resize activation map to img size
-    img = Image.open(original_path)
-    basewidth = img.size[0]
-    wpercent = (basewidth / float(len(activation_map[0])))
-    hsize = int((float(len(activation_map[1])) * float(wpercent)))
+    activation_map_resized = backend.resize_activation_map(img, activation_map_normalized)
 
-    activation_map_resized = np.resize(activation_map, (basewidth, hsize))
+    plt.gray()  # grayscale
     plt.imsave(activation_map_path, activation_map_resized)
 
     activations_overlayed_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'benign.jpg')
