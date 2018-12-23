@@ -3,6 +3,8 @@ import glob
 import os
 import pickle
 
+import sys
+sys.path.insert(0,'..')
 from db.doctor import insert_doctor_into_db_if_not_exists
 from db.database import DB
 

@@ -193,6 +193,8 @@ def prepare_resnet():
     return model, features_layer, resume_path
 
 
+
+
 def run_image_through_model(model, features_layer, image_name, image_path):
     print("set up the uploaded image")
     # normalize with the mean and std of the train dataset, those scores are from imagenet

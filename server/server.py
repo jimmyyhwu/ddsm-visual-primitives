@@ -11,7 +11,8 @@ import sys
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.insert(0, '../deepminer')
+
+sys.path.insert(0, '../training')
 import analyze_full_images
 
 app = Flask(__name__)
@@ -43,7 +44,7 @@ def summary():
 def handle_login():
     name = request.form['name']
     name = urllib.parse.quote_plus(name)
-    backend.register_doctor_if_not_exists(name)
+   # backend.register_doctor_if_not_exists(name)
     return redirect('/home/{}'.format(name))
 
 
@@ -171,7 +172,6 @@ def process_image():
 
     activations_overlayed_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'benign.jpg')
     img.save(activations_overlayed_path)
-
 
     return render_template('single_image.html', success=False, processed=True, full_path=processed_path,
                            top_units_and_activations=top_units_and_activations,
