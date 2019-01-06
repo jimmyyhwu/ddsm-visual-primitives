@@ -1,7 +1,5 @@
 import argparse
 import os
-import time
-from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -16,6 +14,7 @@ from tqdm import tqdm as tqdm
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
+
 
 # --- Load config file: ---
 parser = argparse.ArgumentParser()
