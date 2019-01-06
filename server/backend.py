@@ -9,6 +9,7 @@ from db.doctor import insert_doctor_into_db_if_not_exists
 from db.database import DB
 import numpy as np
 from PIL import Image
+from training.grad_cam import run_grad_cam
 
 STATIC_DIR = 'static'
 DATA_DIR = 'data'
@@ -220,3 +221,7 @@ def normalize_activation_map(activation_map):
     for idx, value in enumerate(activation_map):
         activation_map[idx] = 255*((value-min_value)/(max_value-min_value))
     return activation_map
+
+
+def grad_cam():
+    run_grad_cam(image_path='static/processed/benign.jpg', cuda=False)

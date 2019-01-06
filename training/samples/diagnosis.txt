@@ -1,0 +1,3 @@
+n01440764 normal
+n01443537 benign
+n01484850 malignent

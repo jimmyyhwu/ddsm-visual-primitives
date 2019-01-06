@@ -173,6 +173,7 @@ def process_image():
     activations_overlayed_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'benign.jpg')
     img.save(activations_overlayed_path)
 
+    backend.grad_cam()
     return render_template('single_image.html', success=False, processed=True, full_path=processed_path,
                            top_units_and_activations=top_units_and_activations,
                            activation_map_path=activation_map_path, activations_overlayed_path=activations_overlayed_path)
