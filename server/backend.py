@@ -218,8 +218,7 @@ def resize_activation_map(img, activation_map):
 def normalize_activation_map(activation_map):
     max_value = activation_map.max()
     min_value = activation_map.min()
-    for idx, value in enumerate(activation_map):
-        activation_map[idx] = 255*((value-min_value)/(max_value-min_value))
+    activation_map = 255 * ((activation_map - min_value) / (max_value - min_value))
     return activation_map
 
 

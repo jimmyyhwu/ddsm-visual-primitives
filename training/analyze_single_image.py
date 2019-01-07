@@ -54,8 +54,8 @@ def create_unit_ranking_for_one_image(model, feature_maps_maximums, feature_maps
 
     units_and_activations = []
 
-    for idx, val in enumerate(weighted_max_activations.T):         # 2048, number of units
-        units_and_activations.append((idx, val, feature_maps[idx]))
+    for unit_id, influence_per_class in enumerate(weighted_max_activations.T):         # 2048, number of units
+        units_and_activations.append((unit_id, influence_per_class, feature_maps[unit_id]))
 
     return units_and_activations
 

@@ -38,6 +38,20 @@ def preprocess_image_default(path):
     return preprocess_image(path, IMAGE_SIZE_TO_ANALYZE, transform)
 
 
+def get_preview_of_preprocessed_image(path):
+    target_size = IMAGE_SIZE_TO_ANALYZE
+    image = Image.open(path)
+    min_dim = min(image.size)
+    ratio = target_size / min_dim
+    new_size = (int(ratio * image.size[0]), int(ratio * image.size[1]))
+    image = image.resize(new_size, resample=Image.BILINEAR)  # image shape is now (~1500, 896)
+    delta_w = target_size - new_size[0]
+    delta_h = target_size - new_size[1]
+    padding = (delta_w // 2, delta_h // 2, delta_w - (delta_w // 2), delta_h - (delta_h // 2))
+    image = ImageOps.expand(image, padding)
+    return image
+
+
 class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, image_list_path, target_size, transform):
         self.root = root
