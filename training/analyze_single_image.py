@@ -73,7 +73,7 @@ def return_top_units(units_and_activations, diagnosis, number_of_units):
 def analyze_one_image(image_path, cfg=None):
 
     if not cfg:
-        config_path = "logs_full_images/2018-12-20_13-23-05.683938_resnet152/config.yml"
+        config_path = "/home/mp1819/ddsm-visual-primitives-python3/training/logs_full_images/2018-12-20_13-23-05.683938_resnet152/config.yml"
         with open(config_path, 'r') as f:
             cfg = Munch.fromYAML(f)
 
