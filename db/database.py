@@ -1,6 +1,8 @@
 import sqlite3 as lite
 import os
 
+import sys
+sys.path.insert(0,'../db')
 from populate_images import populate_db_with_images
 from populate_patches import populate_db_with_patches
 

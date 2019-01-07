@@ -1,0 +1,22 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Example Analysis</title>
+</head>
+<body>
+
+    <div class="text-center">
+        <p>Processed file: {{ image_path }}</p>
+
+        <p>Preprocessed input:</p>
+        <img src="{{ preprocessed_full_image_path }}" style="max-height: 500px; max-width: 500px;">
+
+        <div style="margin-top:18px;">
+            <p>Activation maps for top units that activated for this image:</p>
+            {% for rank in range(10) %}
+                <p>Unit: {{ top_units_and_activations[rank][0] }}
+                    <img src="{{ activation_map_prefix + rank|string + '.jpg' }}" style="max-height: 200px; max-width: 200px;">
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+</body>

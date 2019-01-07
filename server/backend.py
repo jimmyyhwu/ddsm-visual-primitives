@@ -3,17 +3,19 @@ import glob
 import os
 import pickle
 
+import sys
+sys.path.insert(0,'..')
 from db.doctor import insert_doctor_into_db_if_not_exists
 from db.database import DB
-
+import numpy as np
 from PIL import Image
+from training.grad_cam import run_grad_cam
 
 STATIC_DIR = 'static'
 DATA_DIR = 'data'
 LOG_DIR = os.path.join(DATA_DIR, 'log')
 
 DB_FILENAME = os.environ['DB_FILENAME'] if 'DB_FILENAME' in os.environ else 'test.db'
-
 
 def get_models_and_layers(full=False, ranked=False):
     if full:
@@ -203,3 +205,22 @@ def get_summary():
 
 def register_doctor_if_not_exists(name):
     insert_doctor_into_db_if_not_exists(name, DB_FILENAME, '../db/')
+
+
+    # resize activation map to img size
+def resize_activation_map(img, activation_map):
+    basewidth = img.size[0]
+    wpercent = (basewidth / float(len(activation_map[0])))
+    hsize = int((float(len(activation_map[1])) * float(wpercent)))
+    return np.resize(activation_map, (basewidth, hsize))
+
+
+def normalize_activation_map(activation_map):
+    max_value = activation_map.max()
+    min_value = activation_map.min()
+    activation_map = 255 * ((activation_map - min_value) / (max_value - min_value))
+    return activation_map
+
+
+def grad_cam():
+    run_grad_cam(image_path='static/processed/benign.jpg', cuda=False)

@@ -13,16 +13,9 @@ from munch import Munch
 from torch.autograd import Variable
 from tqdm import tqdm as tqdm
 
-from dataset import DDSM
-from models.resnet_3class import get_resnet152_3class_model
+from common.dataset import DDSM
+from common.model import get_model_from_config
 from db.database import DB
-
-
-def prepare_model(cfg):
-    resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
-    resume_path = os.path.join('../training', resume_path)
-    model, epoch, optimizer_state, features_layer = get_resnet152_3class_model(resume_path)
-    return model, features_layer, resume_path
 
 
 def run_model_on_all_images(model, features_layer, dataset):
@@ -164,7 +157,7 @@ def print_statistics(ranked_units, max_activation_per_unit_per_input):
 
 
 def analyze_full_images(args, cfg, db_path):
-    model, features_layer, checkpoint_path = prepare_model(cfg)
+    model, features_layer, checkpoint_path = get_model_from_config(cfg, args.epoch)
     val_dataset = DDSM.create_full_image_dataset('val')
 
     max_activation_per_unit_per_input, classifications = run_model_on_all_images(model, features_layer, val_dataset)
@@ -182,8 +175,6 @@ if __name__ == "__main__":
     parser.add_argument('--config_path', default='../training/pretrained/resnet152_3class/config.yml')
     parser.add_argument('--epoch', type=int, default=5)
     parser.add_argument('--final_layer_name', default='layer4')
-    parser.add_argument('--raw_image_dir', default='../data/ddsm_raw')
-    parser.add_argument('--raw_image_list_path', default='../data/ddsm_raw_image_lists/val.txt')
     parser.add_argument('--output_dir', default='output/')
     args = parser.parse_args()
 

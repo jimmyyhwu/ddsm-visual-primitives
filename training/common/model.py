@@ -31,3 +31,13 @@ def get_resnet152_3class_model(checkpoint_path=None):
         print("=> no checkpoint loaded, only ImageNet weights")
 
     return model, epoch, optimizer_state, features_layer
+
+
+def get_model_from_config(cfg, epoch=None):
+    if epoch:
+        resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(epoch))
+    else:
+        resume_path = cfg.training.resume
+    resume_path = os.path.join('../training', resume_path)
+    model, epoch, optimizer_state, features_layer = get_resnet152_3class_model(resume_path)
+    return model, features_layer, resume_path

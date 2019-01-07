@@ -4,10 +4,26 @@ from flask import Flask, render_template, request
 from flask import redirect
 import urllib
 import urllib.parse
-
+import os
 import backend
+import sys
+from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
+
+sys.path.insert(0, '../training')
+from analyze_single_image import analyze_one_image
+from common.dataset import get_preview_of_preprocessed_image
 
 app = Flask(__name__)
+
+STATIC_DIR = 'static'
+UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+PROCESSED_FOLDER = os.path.join(STATIC_DIR, 'processed')
+app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
+PROCESSED_FOLDER = os.path.join(STATIC_DIR, 'activation_maps')
+app.config['ACTIVATIONS_FOLDER'] = PROCESSED_FOLDER
 
 
 @app.route('/')
@@ -29,7 +45,7 @@ def summary():
 def handle_login():
     name = request.form['name']
     name = urllib.parse.quote_plus(name)
-    backend.register_doctor_if_not_exists(name)
+   # backend.register_doctor_if_not_exists(name)
     return redirect('/home/{}'.format(name))
 
 
@@ -122,3 +138,74 @@ def handle_survey_full():
 @app.route('/handle_survey/ranked', methods=['POST'])
 def handle_survey_ranked():
     return handle_survey(ranked=True)
+
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['image']
+    full_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+
+    # add your custom code to check that the uploaded file is a valid image and not a malicious file (out-of-scope for this post)
+    file.save(full_path)
+
+    return render_template('single_image.html', success=True, full_path=full_path)
+
+
+@app.route('/process_image', methods=['POST'])
+def process_image():
+    original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
+    processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
+    top_units_and_activations = analyze_full_images.analyze_one_image(image_name='benign.jpg')
+
+    activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
+
+    activation_map = top_units_and_activations[0][2]  # activation map for unit 0 => top unit
+
+    img = Image.open(original_path)
+    # normalize activation values between 0 and 255
+    activation_map_normalized = backend.normalize_activation_map(activation_map)
+
+    # resize activation map to img size
+    activation_map_resized = backend.resize_activation_map(img, activation_map_normalized)
+
+    plt.gray()  # grayscale
+    plt.imsave(activation_map_path, activation_map_resized)
+
+    activations_overlayed_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'benign.jpg')
+    img.save(activations_overlayed_path)
+
+    backend.grad_cam()
+    return render_template('single_image.html', success=False, processed=True, full_path=processed_path,
+                           top_units_and_activations=top_units_and_activations,
+                           activation_map_path=activation_map_path, activations_overlayed_path=activations_overlayed_path)
+
+
+@app.route('/single_image/')
+def single_image():
+    return render_template('single_image.html', success=False, processed=False, full_path='')
+
+
+@app.route('/example_analysis')
+def example_analysis():
+    preprocessed_full_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'full_image.jpg')
+
+    image_path = '../data/ddsm_raw/cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg'
+    preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
+    preprocessed_full_image.save(preprocessed_full_image_path)
+    top_units_and_activations = analyze_one_image(image_path)
+
+    for i in range(10):
+        activation_map = top_units_and_activations[i][2]  # activation map for unit with rank i
+
+        activation_map_normalized = backend.normalize_activation_map(activation_map)
+
+        act_map_img = Image.fromarray(activation_map_normalized.astype(np.uint8), mode="L")
+        act_map_img = act_map_img.resize(preprocessed_full_image.size, resample=Image.BICUBIC)
+        activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(i))
+        act_map_img.save(activation_map_path, "JPEG")
+
+    activation_map_prefix = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_')
+    return render_template('example_analysis.html', image_path=image_path, preprocessed_full_image_path=preprocessed_full_image_path,
+                           top_units_and_activations=top_units_and_activations,
+                           activation_map_prefix=activation_map_prefix)
+
