@@ -155,7 +155,7 @@ def upload_file():
 def process_image():
     original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    top_units_and_activations = analyze_full_images.analyze_one_image(image_name='benign.jpg')
+    top_units_and_activations = analyze_one_image(os.path.join('../server/static/uploads', 'benign.jpg'))
 
     activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
 
