@@ -65,11 +65,13 @@ for input, target in tqdm(val_loader):
         probs[i].extend(prob[:, i].data.cpu().numpy())
 
 # --- Print statistics: ---
-for i in range(cfg.arch.num_classes):
-    print('class {}'.format(i))
-    print('torchnet.meter.AUCMeter: {}'.format(aucs[i].value()[0]))
-    print('sklearn.metrics.roc_auc_score: {}'.format(roc_auc_score(targets[i], probs[i])))
-    print('')
+checkpoint_identifier = checkpoint_path.replace('/', '__')
+with open('auc_score_{}.txt'.format(checkpoint_identifier), 'w') as text_file:
+    for i in range(cfg.arch.num_classes):
+        print('class {}'.format(i), file=text_file)
+        print('torchnet.meter.AUCMeter: {}'.format(aucs[i].value()[0]), file=text_file)
+        print('sklearn.metrics.roc_auc_score: {}'.format(roc_auc_score(targets[i], probs[i])), file=text_file)
+        print('', file=text_file)
 
 
 def plot_roc_curve(y_true, y_score, filename):
@@ -86,5 +88,4 @@ def plot_roc_curve(y_true, y_score, filename):
 
 
 for i in range(cfg.arch.num_classes):
-    checkpoint_identifier = checkpoint_path.replace('/', '__')
     plot_roc_curve(targets[i], probs[i], 'roc_for_class_{}_{}.png'.format(i, checkpoint_identifier))
