@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, '../training')
-import analyze_full_images
+from analyze_single_image import analyze_one_image
 
 app = Flask(__name__)
 
@@ -154,7 +154,9 @@ def upload_file():
 def process_image():
     original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    top_units_and_activations = analyze_full_images.analyze_one_image(image_name='benign.jpg')
+
+    image_path = os.path.join('../server/static/uploads', 'benign.jpg')
+    top_units_and_activations = analyze_one_image(image_path)
 
     activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
 

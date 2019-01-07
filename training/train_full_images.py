@@ -13,8 +13,8 @@ from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-from dataset import DDSM
-from models.resnet_3class import get_resnet152_3class_model
+from common.dataset import DDSM
+from common.model import get_resnet152_3class_model
 
 
 def accuracy(output, target):
