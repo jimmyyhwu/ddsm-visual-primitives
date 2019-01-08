@@ -7,13 +7,15 @@ import urllib.parse
 import os
 import backend
 import sys
-from PIL import Image
+from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, '../training')
-from analyze_single_image import analyze_one_image
+from analyze_single_image import SingleImageAnalysis
 from common.dataset import get_preview_of_preprocessed_image
+
+single_image_analysis = SingleImageAnalysis()
 
 app = Flask(__name__)
 
@@ -155,10 +157,11 @@ def upload_file():
 def process_image():
     original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    top_units_and_activations = analyze_one_image(os.path.join('../server/static/uploads', 'benign.jpg'))
+    result = single_image_analysis.analyze_one_image(os.path.join('../server/static/uploads', 'benign.jpg'))
 
     activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
 
+    top_units_and_activations = result.get_top_units(result.classification, 1)
     activation_map = top_units_and_activations[0][2]  # activation map for unit 0 => top unit
 
     img = Image.open(original_path)
@@ -192,20 +195,29 @@ def example_analysis():
     image_path = '../data/ddsm_raw/cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg'
     preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
     preprocessed_full_image.save(preprocessed_full_image_path)
-    top_units_and_activations = analyze_one_image(image_path)
+    result = single_image_analysis.analyze_one_image(image_path)
 
-    for i in range(10):
+    units_to_show = 10
+    top_units_and_activations = result.get_top_units(result.classification, units_to_show)
+
+    for i in range(units_to_show):
         activation_map = top_units_and_activations[i][2]  # activation map for unit with rank i
 
         activation_map_normalized = backend.normalize_activation_map(activation_map)
 
         act_map_img = Image.fromarray(activation_map_normalized.astype(np.uint8), mode="L")
+        act_map_img = ImageOps.colorize(act_map_img, (0, 0, 0), (255, 0, 0))
         act_map_img = act_map_img.resize(preprocessed_full_image.size, resample=Image.BICUBIC)
         activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(i))
         act_map_img.save(activation_map_path, "JPEG")
 
     activation_map_prefix = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_')
-    return render_template('example_analysis.html', image_path=image_path, preprocessed_full_image_path=preprocessed_full_image_path,
+    return render_template('example_analysis.html',
+                           image_path=result.image_path,
+                           preprocessed_full_image_path=preprocessed_full_image_path,
+                           checkpoint_path=result.checkpoint_path,
+                           classification=result.classification,
+                           class_probs=result.class_probs,
                            top_units_and_activations=top_units_and_activations,
                            activation_map_prefix=activation_map_prefix)
 

@@ -5,17 +5,26 @@
 <body>
 
     <div class="text-center">
-        <p>Processed file: {{ image_path }}</p>
+        <p>Input file: {{ image_path }}</p>
 
         <p>Preprocessed input:</p>
         <img src="{{ preprocessed_full_image_path }}" style="max-height: 500px; max-width: 500px;">
 
+        <p>Checkpoint used: {{ checkpoint_path }}</p>
+        <p>Class probabilities: {{ class_probs }}</p>
+        <p>Classification: {{ classification }}</p>
+
         <div style="margin-top:18px;">
             <p>Activation maps for top units that activated for this image:</p>
             {% for rank in range(10) %}
-                <p>Unit: {{ top_units_and_activations[rank][0] }}
-                    <img src="{{ activation_map_prefix + rank|string + '.jpg' }}" style="max-height: 200px; max-width: 200px;">
-                </p>
+                <p>Unit: {{ top_units_and_activations[rank][0] }} Influence per class: {{ top_units_and_activations[rank][1] }}</p>
+                <div style="
+                        height: 200px; width: 200px;
+                        background-image: url({{ preprocessed_full_image_path }}), url({{ activation_map_prefix + rank|string + '.jpg' }});
+                        background-blend-mode: screen;
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                "></div>
             {% endfor %}
         </div>
     </div>
