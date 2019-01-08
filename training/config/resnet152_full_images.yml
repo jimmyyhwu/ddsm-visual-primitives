@@ -1,5 +1,5 @@
 data:
-    batch_size: 4
+    batch_size: 2
     workers: 4
 arch:
     num_classes: 3
