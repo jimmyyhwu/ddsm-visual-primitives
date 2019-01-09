@@ -10,12 +10,10 @@ import sys
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 import numpy as np
+import uuid
 
 sys.path.insert(0, '../training')
-from analyze_single_image import SingleImageAnalysis
 from common.dataset import get_preview_of_preprocessed_image
-
-single_image_analysis = SingleImageAnalysis()
 
 app = Flask(__name__)
 
@@ -157,7 +155,7 @@ def upload_file():
 def process_image():
     original_path = os.path.join(app.config['UPLOAD_FOLDER'],  'test.jpg')
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], 'benign.jpg')
-    result = single_image_analysis.analyze_one_image(os.path.join('../server/static/uploads', 'benign.jpg'))
+    result = backend.single_image_analysis.analyze_one_image(os.path.join('../server/static/uploads', 'benign.jpg'))
 
     activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation.jpg')
 
@@ -190,16 +188,18 @@ def single_image():
 
 @app.route('/example_analysis')
 def example_analysis():
-    preprocessed_full_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'full_image.jpg')
+    preprocessed_full_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'full_image_{}.jpg'.format(uuid.uuid4()))
 
     image_path = '../data/ddsm_raw/cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg'
     preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
     preprocessed_image_height = preprocessed_full_image.size[1]
     preprocessed_full_image.save(preprocessed_full_image_path)
-    result = single_image_analysis.analyze_one_image(image_path)
+    result = backend.single_image_analysis.analyze_one_image(image_path)
 
     units_to_show = 10
     top_units_and_activations = result.get_top_units(result.classification, units_to_show)
+
+    activation_maps = []
 
     for i in range(units_to_show):
         activation_map = top_units_and_activations[i][2]  # activation map for unit with rank i
@@ -209,8 +209,9 @@ def example_analysis():
         act_map_img = Image.fromarray(activation_map_normalized.astype(np.uint8), mode="L")
         act_map_img = ImageOps.colorize(act_map_img, (0, 0, 0), (255, 0, 0))
         act_map_img = act_map_img.resize(preprocessed_full_image.size, resample=Image.BICUBIC)
-        activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(i))
+        activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(uuid.uuid4()))
         act_map_img.save(activation_map_path, "JPEG")
+        activation_maps.append(activation_map_path)
 
     activation_map_prefix = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_')
     return render_template('example_analysis.html',
@@ -221,15 +222,29 @@ def example_analysis():
                            classification=result.classification,
                            class_probs=result.class_probs,
                            top_units_and_activations=top_units_and_activations,
-                           activation_map_prefix=activation_map_prefix)
+                           activation_maps=activation_maps)
 
 
 @app.route('/unit/<unit_id>')
 def unit(unit_id):
-
+    unit_id = int(unit_id)
     top_images = backend.get_top_images_for_unit(unit_id)
+    preprocessed_top_images = []
+    activation_maps = []
+
+    for i, image_path in enumerate(top_images):
+        preprocessed_image = get_preview_of_preprocessed_image(image_path)
+        preprocessed_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'preprocessed_{}.jpg'.format(uuid.uuid4()))
+        preprocessed_image.save(preprocessed_image_path)
+        preprocessed_top_images.append(preprocessed_image_path)
+        act_map_img = backend.get_activation_map(image_path, unit_id)
+        activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(uuid.uuid4()))
+        act_map_img.save(activation_map_path, "JPEG")
+        activation_maps.append(activation_map_path)
 
     return render_template('unit.html',
                            unit_id=unit_id,
-                           top_images=top_images)
+                           top_images=top_images,
+                           preprocessed_top_images=preprocessed_top_images,
+                           activation_maps=activation_maps)
 

@@ -8,14 +8,20 @@ sys.path.insert(0,'..')
 from db.doctor import insert_doctor_into_db_if_not_exists
 from db.database import DB
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
+
 from training.grad_cam import run_grad_cam
+from analyze_single_image import SingleImageAnalysis
+from common.dataset import get_preview_of_preprocessed_image
 
 STATIC_DIR = 'static'
 DATA_DIR = 'data'
 LOG_DIR = os.path.join(DATA_DIR, 'log')
 
 DB_FILENAME = os.environ['DB_FILENAME'] if 'DB_FILENAME' in os.environ else 'test.db'
+
+single_image_analysis = SingleImageAnalysis()
+
 
 def get_models_and_layers(full=False, ranked=False):
     if full:
@@ -239,6 +245,19 @@ def get_top_images_for_unit(unit_id):
     top_images = []
 
     for row in c.execute(select_stmt, (unit_id,)):
-        top_images.append(os.path.join("/static/ddsm_raw/", row[0]))
+        top_images.append(os.path.join("../data/ddsm_raw/", row[0]))
 
     return top_images
+
+
+def get_activation_map(image_path, unit_id):
+    preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
+    result = single_image_analysis.analyze_one_image(image_path)
+
+    activation_map = result.feature_maps[unit_id]
+    activation_map_normalized = normalize_activation_map(activation_map)
+
+    act_map_img = Image.fromarray(activation_map_normalized.astype(np.uint8), mode="L")
+    act_map_img = ImageOps.colorize(act_map_img, (0, 0, 0), (255, 0, 0))
+    act_map_img = act_map_img.resize(preprocessed_full_image.size, resample=Image.BICUBIC)
+    return act_map_img

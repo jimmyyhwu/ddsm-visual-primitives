@@ -78,7 +78,6 @@ class SingleImageAnalysis(object):
             result.classification = int(np.argmax(class_probs))  # int
             result.class_probs = class_probs
 
-        print("saved max activations per unit")
         return result
 
 
