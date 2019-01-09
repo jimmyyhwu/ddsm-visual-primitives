@@ -24,20 +24,10 @@ class AnalysisResult(object):
         self.classification = None
 
     def get_top_units(self, diagnosis_class, number_of_units):
-        print("Sort for top", number_of_units, "units")
-        units_and_activations = self._create_unit_ranking()
-        ranked_units_and_activations = sorted(units_and_activations, key=lambda x: x[1][diagnosis_class], reverse=True)[
-                                       :number_of_units]
-        # entries of ranked_units_and_activations: unit_name, diagnosis[0,1,2], activation_map for the unit
-        return ranked_units_and_activations
-
-    def _create_unit_ranking(self):
-        print("create unit ranking")
-
         params = list(self.model.parameters())
         weight_softmax = params[-2].data.cpu().numpy()
 
-        # rank the units by influence
+        # calculate influence of units
         feature_maps_maximums = np.expand_dims(self.feature_maps_maximums, 0)  # shape: (1, 2048)
         weighted_max_activations = feature_maps_maximums * weight_softmax  # shape: (num_classes=3, 2048)
 
@@ -46,7 +36,11 @@ class AnalysisResult(object):
         for unit_id, influence_per_class in enumerate(weighted_max_activations.T):  # 2048, number of units
             units_and_activations.append((unit_id, influence_per_class, self.feature_maps[unit_id]))
 
-        return units_and_activations
+        ranked_units_and_activations = sorted(units_and_activations, key=lambda x: x[1][diagnosis_class], reverse=True)[
+                                       :number_of_units]
+
+        # entries of ranked_units_and_activations: unit_name, influence_per_class[0,1,2], activation_map for the unit
+        return ranked_units_and_activations
 
 
 class SingleImageAnalysis(object):
@@ -54,7 +48,7 @@ class SingleImageAnalysis(object):
     def __init__(self, cfg=None):
         self.cfg = cfg
         if not self.cfg:
-            config_path = "/home/mp1819/ddsm-visual-primitives-python3/training/logs_full_images/2018-12-20_13-23-05.683938_resnet152/config.yml"
+            config_path = "/home/mp1819/ddsm-visual-primitives-python3/training/logs_full_images/2019-01-07_16-04-08.733832_resnet152/config.yml"
             with open(config_path, 'r') as f:
                 self.cfg = Munch.fromYAML(f)
         self.model, self.features_layer, self.checkpoint_path = get_model_from_config(self.cfg)

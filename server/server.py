@@ -194,6 +194,7 @@ def example_analysis():
 
     image_path = '../data/ddsm_raw/cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg'
     preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
+    preprocessed_image_height = preprocessed_full_image.size[1]
     preprocessed_full_image.save(preprocessed_full_image_path)
     result = single_image_analysis.analyze_one_image(image_path)
 
@@ -215,6 +216,7 @@ def example_analysis():
     return render_template('example_analysis.html',
                            image_path=result.image_path,
                            preprocessed_full_image_path=preprocessed_full_image_path,
+                           preprocessed_image_height=preprocessed_image_height,
                            checkpoint_path=result.checkpoint_path,
                            classification=result.classification,
                            class_probs=result.class_probs,
