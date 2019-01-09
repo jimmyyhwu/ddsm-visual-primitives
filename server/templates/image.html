@@ -8,7 +8,7 @@
         <p>Input file: {{ image_path }}</p>
 
         <p>Preprocessed input (height: {{ preprocessed_image_height }}):</p>
-        <img src="{{ preprocessed_full_image_path }}" style="max-height: 500px; max-width: 500px;">
+        <img src="{{ "/" + preprocessed_full_image_path }}" style="max-height: 500px; max-width: 500px;">
 
         <p>Checkpoint used: {{ checkpoint_path }}</p>
         <p>Class probabilities: {{ class_probs }}</p>
@@ -18,9 +18,9 @@
             <p>Activation maps for top units that activated for this image:</p>
             {% for rank in range(10) %}
                 <p>Unit: {{ top_units_and_activations[rank][0] }} Influence per class: {{ top_units_and_activations[rank][1] }}</p>
-                <a href="unit/{{ top_units_and_activations[rank][0] }}"><div style="
+                <a href="/unit/{{ top_units_and_activations[rank][0] }}"><div style="
                         height: 200px; width: 200px;
-                        background-image: url({{ preprocessed_full_image_path }}), url({{ activation_maps[rank] }});
+                        background-image: url({{ "/" + preprocessed_full_image_path }}), url({{ "/" + activation_maps[rank] }});
                         background-blend-mode: screen;
                         background-size: contain;
                         background-repeat: no-repeat;

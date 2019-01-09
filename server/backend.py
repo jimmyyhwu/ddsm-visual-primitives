@@ -232,7 +232,7 @@ def grad_cam():
     run_grad_cam(image_path='static/processed/benign.jpg', cuda=False)
 
 
-def get_top_images_for_unit(unit_id):
+def get_top_images_for_unit(unit_id, count):
     db = DB(DB_FILENAME, '../db/')
     conn = db.get_connection()
     c = conn.cursor()
@@ -240,12 +240,12 @@ def get_top_images_for_unit(unit_id):
     select_stmt = "SELECT image.image_path FROM image_unit_activation " \
                   "INNER JOIN image ON image_unit_activation.image_id = image.id " \
                   "WHERE image_unit_activation.unit_id = ? ORDER BY image_unit_activation.activation DESC " \
-                  "LIMIT 10"
+                  "LIMIT ?"
 
     top_images = []
 
-    for row in c.execute(select_stmt, (unit_id,)):
-        top_images.append(os.path.join("../data/ddsm_raw/", row[0]))
+    for row in c.execute(select_stmt, (unit_id, count)):
+        top_images.append(row[0])
 
     return top_images
 

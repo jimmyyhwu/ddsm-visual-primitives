@@ -12,13 +12,13 @@
     <p>Images were this unit activated highest:</p>
     {% for i in range(top_images|length) %}
         <p>Image: {{ top_images[i] }}</p>
-        <div style="
+        <a href="/image/{{ top_images[i] }}"><div style="
                         height: 200px; width: 200px;
                         background-image: url({{ "/" + preprocessed_top_images[i] }}), url({{ "/" + activation_maps[i] }});
                         background-blend-mode: screen;
                         background-size: contain;
                         background-repeat: no-repeat;
-                "></div>
+        "></div></a>
     {% endfor %}
 </div>
 

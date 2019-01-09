@@ -188,11 +188,15 @@ def single_image():
 
 @app.route('/example_analysis')
 def example_analysis():
-    preprocessed_full_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'full_image_{}.jpg'.format(uuid.uuid4()))
+    example_analysis('cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg')
 
-    image_path = '../data/ddsm_raw/cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg'
+
+@app.route('/image/<image_path>')
+def image(image_path):
+    image_path = os.path.join('../data/ddsm_raw/', image_path)
     preprocessed_full_image = get_preview_of_preprocessed_image(image_path)
     preprocessed_image_height = preprocessed_full_image.size[1]
+    preprocessed_full_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'full_image_{}.jpg'.format(uuid.uuid4()))
     preprocessed_full_image.save(preprocessed_full_image_path)
     result = backend.single_image_analysis.analyze_one_image(image_path)
 
@@ -213,8 +217,7 @@ def example_analysis():
         act_map_img.save(activation_map_path, "JPEG")
         activation_maps.append(activation_map_path)
 
-    activation_map_prefix = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_')
-    return render_template('example_analysis.html',
+    return render_template('image.html',
                            image_path=result.image_path,
                            preprocessed_full_image_path=preprocessed_full_image_path,
                            preprocessed_image_height=preprocessed_image_height,
@@ -228,16 +231,16 @@ def example_analysis():
 @app.route('/unit/<unit_id>')
 def unit(unit_id):
     unit_id = int(unit_id)
-    top_images = backend.get_top_images_for_unit(unit_id)
+    top_images = backend.get_top_images_for_unit(unit_id, 4)
     preprocessed_top_images = []
     activation_maps = []
 
     for i, image_path in enumerate(top_images):
-        preprocessed_image = get_preview_of_preprocessed_image(image_path)
+        preprocessed_image = get_preview_of_preprocessed_image(os.path.join("../data/ddsm_raw/", image_path))
         preprocessed_image_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'preprocessed_{}.jpg'.format(uuid.uuid4()))
         preprocessed_image.save(preprocessed_image_path)
         preprocessed_top_images.append(preprocessed_image_path)
-        act_map_img = backend.get_activation_map(image_path, unit_id)
+        act_map_img = backend.get_activation_map(os.path.join("../data/ddsm_raw/", image_path), unit_id)
         activation_map_path = os.path.join(app.config['ACTIVATIONS_FOLDER'], 'activation_{}.jpg'.format(uuid.uuid4()))
         act_map_img.save(activation_map_path, "JPEG")
         activation_maps.append(activation_map_path)
