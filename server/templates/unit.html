@@ -10,9 +10,15 @@
 
 <div style="margin-top:18px;">
     <p>Images were this unit activated highest:</p>
-    {% for image_path in top_images %}
-        <p>Image: {{ image_path }}</p>
-        <img src="{{ image_path }}" style="max-height: 200px; max-width: 200px;"/>
+    {% for i in range(top_images|length) %}
+        <p>Image: {{ top_images[i] }}</p>
+        <div style="
+                        height: 200px; width: 200px;
+                        background-image: url({{ "/" + preprocessed_top_images[i] }}), url({{ "/" + activation_maps[i] }});
+                        background-blend-mode: screen;
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                "></div>
     {% endfor %}
 </div>
 

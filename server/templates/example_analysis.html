@@ -20,7 +20,7 @@
                 <p>Unit: {{ top_units_and_activations[rank][0] }} Influence per class: {{ top_units_and_activations[rank][1] }}</p>
                 <a href="unit/{{ top_units_and_activations[rank][0] }}"><div style="
                         height: 200px; width: 200px;
-                        background-image: url({{ preprocessed_full_image_path }}), url({{ activation_map_prefix + rank|string + '.jpg' }});
+                        background-image: url({{ preprocessed_full_image_path }}), url({{ activation_maps[rank] }});
                         background-blend-mode: screen;
                         background-size: contain;
                         background-repeat: no-repeat;
