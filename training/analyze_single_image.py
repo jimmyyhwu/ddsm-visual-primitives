@@ -48,7 +48,7 @@ class SingleImageAnalysis(object):
     def __init__(self, cfg=None):
         self.cfg = cfg
         if not self.cfg:
-            config_path = "/home/mp1819/ddsm-visual-primitives-python3/training/logs_full_images/2019-01-07_16-04-08.733832_resnet152/config.yml"
+            config_path = "/home/mp1819/ddsm-visual-primitives-python3/training/logs_full_images/2018-12-20_13-23-05.683938_resnet152/config.yml"
             with open(config_path, 'r') as f:
                 self.cfg = Munch.fromYAML(f)
         self.model, self.features_layer, self.checkpoint_path = get_model_from_config(self.cfg)
