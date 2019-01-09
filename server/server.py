@@ -188,7 +188,7 @@ def single_image():
 
 @app.route('/example_analysis')
 def example_analysis():
-    example_analysis('cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg')
+    image('cancer_05-C_0128_1.LEFT_CC.LJPEG.1.jpg')
 
 
 @app.route('/image/<image_path>')
