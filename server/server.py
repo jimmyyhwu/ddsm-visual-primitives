@@ -223,3 +223,13 @@ def example_analysis():
                            top_units_and_activations=top_units_and_activations,
                            activation_map_prefix=activation_map_prefix)
 
+
+@app.route('/unit/<unit_id>')
+def unit(unit_id):
+
+    top_images = backend.get_top_images_for_unit(unit_id)
+
+    return render_template('unit.html',
+                           unit_id=unit_id,
+                           top_images=top_images)
+

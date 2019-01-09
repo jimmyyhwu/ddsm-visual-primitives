@@ -224,3 +224,21 @@ def normalize_activation_map(activation_map):
 
 def grad_cam():
     run_grad_cam(image_path='static/processed/benign.jpg', cuda=False)
+
+
+def get_top_images_for_unit(unit_id):
+    db = DB(DB_FILENAME, '../db/')
+    conn = db.get_connection()
+    c = conn.cursor()
+
+    select_stmt = "SELECT image.image_path FROM image_unit_activation " \
+                  "INNER JOIN image ON image_unit_activation.image_id = image.id " \
+                  "WHERE image_unit_activation.unit_id = ? ORDER BY image_unit_activation.activation DESC " \
+                  "LIMIT 10"
+
+    top_images = []
+
+    for row in c.execute(select_stmt, (unit_id,)):
+        top_images.append(os.path.join("/static/ddsm_raw/", row[0]))
+
+    return top_images

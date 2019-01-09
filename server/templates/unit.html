@@ -6,5 +6,15 @@
 </head>
 <body>
 
+<h1>Unit {{ unit_id }}</h1>
+
+<div style="margin-top:18px;">
+    <p>Images were this unit activated highest:</p>
+    {% for image_path in top_images %}
+        <p>Image: {{ image_path }}</p>
+        <img src="{{ image_path }}" style="max-height: 200px; max-width: 200px;"/>
+    {% endfor %}
+</div>
+
 </body>
 </html>

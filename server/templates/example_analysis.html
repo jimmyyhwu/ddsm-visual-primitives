@@ -18,13 +18,13 @@
             <p>Activation maps for top units that activated for this image:</p>
             {% for rank in range(10) %}
                 <p>Unit: {{ top_units_and_activations[rank][0] }} Influence per class: {{ top_units_and_activations[rank][1] }}</p>
-                <div style="
+                <a href="unit/{{ top_units_and_activations[rank][0] }}"><div style="
                         height: 200px; width: 200px;
                         background-image: url({{ preprocessed_full_image_path }}), url({{ activation_map_prefix + rank|string + '.jpg' }});
                         background-blend-mode: screen;
                         background-size: contain;
                         background-repeat: no-repeat;
-                "></div>
+                "></div></a>
             {% endfor %}
         </div>
     </div>
