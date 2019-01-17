@@ -11,7 +11,7 @@ class DDSM(torch.utils.data.Dataset):
             label = int(label)
             return image_name, label
         with open(os.path.join(root, '{}.txt'.format(split)), 'r') as f:
-            self.image_list = map(process_line, f.readlines())
+            self.image_list = list(map(process_line, f.readlines()))
         self.transform = transform
 
     def __len__(self):

@@ -19,11 +19,8 @@ from torch.autograd import Variable
 import dataset
 
 
-# pytorch 0.2 and torchvision 0.1.9
-import sys
+# pytorch 1.0 and torchvision 0.1.9
 import torchvision
-assert sys.version.startswith('2')
-assert torch.__version__.startswith('0.2')
 assert '0.1.9' in torchvision.__file__
 
 
@@ -77,18 +74,16 @@ def train(train_loader, model, criterion, optimizer, epoch):
     for i, (input, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
-        target = target.cuda(async=True)
-        input_var = Variable(input)
-        target_var = Variable(target)
+        target = target.cuda(non_blocking=True)
 
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        output = model(input)
+        loss = criterion(output, target)
 
-        acc = accuracy(output.data, target)
-        losses.update(loss.data[0], input.size(0))
+        acc = accuracy(output, target)
+        losses.update(loss.item(), input.size(0))
         accuracies.update(acc, input.size(0))
-        prob = nn.Softmax()(output)[:, 1]
-        auc.add(prob.data, target)
+        prob = nn.Softmax(dim=1)(output.detach())[:, 1].cpu().numpy()
+        auc.add(prob, target)
 
         optimizer.zero_grad()
         loss.backward()
@@ -116,29 +111,28 @@ def validate(val_loader, model, criterion):
     auc = torchnet.meter.AUCMeter()
     model.eval()
     end = time.time()
-    for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(async=True)
-        input_var = Variable(input, volatile=True)
-        target_var = Variable(target, volatile=True)
+    with torch.no_grad():
+        for i, (input, target) in enumerate(val_loader):
+            target = target.cuda(non_blocking=True)
 
-        output = model(input_var)
-        loss = criterion(output, target_var)
+            output = model(input)
+            loss = criterion(output, target)
 
-        acc = accuracy(output.data, target)
-        losses.update(loss.data[0], input.size(0))
-        accuracies.update(acc, input.size(0))
-        prob = nn.Softmax()(output)[:, 1]
-        auc.add(prob.data, target)
+            acc = accuracy(output, target)
+            losses.update(loss.item(), input.size(0))
+            accuracies.update(acc, input.size(0))
+            prob = nn.Softmax(dim=1)(output)[:, 1].cpu().numpy()
+            auc.add(prob, target)
 
-        batch_time.update(time.time() - end)
-        end = time.time()
+            batch_time.update(time.time() - end)
+            end = time.time()
 
-        if i % cfg.training.print_freq == 0:
-            print('Test: [{0}/{1}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Accuracy {accuracy.val:.4f} ({accuracy.avg:.4f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses, accuracy=accuracies))
+            if i % cfg.training.print_freq == 0:
+                print('Test: [{0}/{1}]\t'
+                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                      'Accuracy {accuracy.val:.4f} ({accuracy.avg:.4f})'.format(
+                       i, len(val_loader), batch_time=batch_time, loss=losses, accuracy=accuracies))
 
     return batch_time.avg, losses.avg, accuracies.avg, auc.value()[0]
 

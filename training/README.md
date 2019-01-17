@@ -3,10 +3,10 @@
 
 ## Dependencies
 
-- python 2.7
+- python 3.6
 - PIL
-- pytorch 0.2 (`conda install pytorch=0.2 cuda80 -c soumith`)
-- torchvision 0.1.9 (`pip uninstall torchvision && conda install torchvision=0.1.9 -c soumith`)
+- pytorch 1.0
+- torchvision 0.1.9 (`conda install torchvision=0.1.9 -c soumith`)
 - [torchnet](https://github.com/pytorch/tnt) (`pip install git+https://github.com/pytorch/tnt.git@master`)
 - tensorboardX
 - tensorflow (for running TensorBoard)

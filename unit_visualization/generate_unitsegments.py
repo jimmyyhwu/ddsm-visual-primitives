@@ -137,7 +137,7 @@ class DDSM(torch.utils.data.Dataset):
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 with open(os.path.join(data_root, 'val.txt'), 'r') as f:
-    image_list = map(lambda x: x.strip().split(' ')[0], f.readlines())
+    image_list = list(map(lambda x: x.strip().split(' ')[0], f.readlines()))
 val_transforms = []
 if cfg.arch.model == 'inception_v3':
     val_transforms.append(transforms.Scale(299))
@@ -154,22 +154,22 @@ data_loader = torch.utils.data.DataLoader(
 imglist_results = []
 maxfeatures = [None] * len(features)
 num_batches = len(data_loader)
-for batch_idx, (input, paths) in enumerate(data_loader):
-    del features_blobs[:]
-    print('%d / %d' % (batch_idx+1, num_batches))
-    input = input.cuda()
-    input_var = Variable(input, volatile=True)
-    logit = model.forward(input_var)
-    imglist_results = imglist_results + list(paths)
-    if maxfeatures[0] is None:
-        # initialize the feature variable
+with torch.no_grad():
+    for batch_idx, (input, paths) in enumerate(data_loader):
+        del features_blobs[:]
+        print('%d / %d' % (batch_idx+1, num_batches))
+        input = input.cuda()
+        logit = model.forward(input)
+        imglist_results = imglist_results + list(paths)
+        if maxfeatures[0] is None:
+            # initialize the feature variable
+            for i, feat_batch in enumerate(features_blobs):
+                size_features = (len(dataset), feat_batch.shape[1])
+                maxfeatures[i] = np.zeros(size_features)
+        start_idx = batch_idx*args.batch_size
+        end_idx = min((batch_idx+1)*args.batch_size, len(dataset))
         for i, feat_batch in enumerate(features_blobs):
-            size_features = (len(dataset), feat_batch.shape[1])
-            maxfeatures[i] = np.zeros(size_features)
-    start_idx = batch_idx*args.batch_size
-    end_idx = min((batch_idx+1)*args.batch_size, len(dataset))
-    for i, feat_batch in enumerate(features_blobs):
-        maxfeatures[i][start_idx:end_idx] = np.max(np.max(feat_batch,3),2)
+            maxfeatures[i][start_idx:end_idx] = np.max(np.max(feat_batch,3),2)
 
 
 # generate the unit visualization
@@ -191,33 +191,33 @@ for layerID, (name, layer) in enumerate(features):
         dataset_top, batch_size=num_top, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-    for unitID, (input, paths) in enumerate(data_loader_top):
-        del features_blobs[:]
-        print('%d / %d' % (unitID+1, num_units))
-        input = input.cuda()
-        input_var = Variable(input, volatile=True)
-        logit = model.forward(input_var)
-        feature_maps = features_blobs[layerID]
-        images_input = input.cpu().numpy()
-        max_value = 0
-        for i in range(num_top):
-            feature_map = feature_maps[i][unitID]
-            if max_value == 0:
-                max_value = np.max(feature_map)
-            feature_map = feature_map / max_value
-            mask = np.array(Image.fromarray(feature_map).resize(resize_size, resample=Image.BILINEAR))
-            alpha = 0.2
-            mask[mask < threshold_scale] = alpha # binarize the mask
-            mask[mask > threshold_scale] = 1.0
+    with torch.no_grad():
+        for unitID, (input, paths) in enumerate(data_loader_top):
+            del features_blobs[:]
+            print('%d / %d' % (unitID+1, num_units))
+            input = input.cuda()
+            logit = model.forward(input)
+            feature_maps = features_blobs[layerID]
+            images_input = input.cpu().numpy()
+            max_value = 0
+            for i in range(num_top):
+                feature_map = feature_maps[i][unitID]
+                if max_value == 0:
+                    max_value = np.max(feature_map)
+                feature_map = feature_map / max_value
+                mask = np.array(Image.fromarray(feature_map).resize(resize_size, resample=Image.BILINEAR))
+                alpha = 0.2
+                mask[mask < threshold_scale] = alpha # binarize the mask
+                mask[mask > threshold_scale] = 1.0
 
-            img = Image.open(os.path.join(data_root, paths[i]))
-            img = img.resize(resize_size, resample=Image.BILINEAR)
-            img = np.asarray(img, dtype=np.float32)
-            img_mask = np.multiply(img, mask[:,:, np.newaxis])
-            img_mask = np.uint8(img_mask)
-            suffix = os.path.basename(list(paths)[i])
-            layer_unit_dir = os.path.join(output_dir, 'images', args.experiment_name, name, 'unit_{:04}'.format(unitID + 1))
-            if not os.path.exists(layer_unit_dir):
-                os.makedirs(layer_unit_dir)
-            out_img_name = os.path.join(layer_unit_dir, '{:04}_{}'.format(i + 1, suffix))
-            Image.fromarray(img_mask).save(out_img_name)
+                img = Image.open(os.path.join(data_root, paths[i]))
+                img = img.resize(resize_size, resample=Image.BILINEAR)
+                img = np.asarray(img, dtype=np.float32)
+                img_mask = np.multiply(img, mask[:,:, np.newaxis])
+                img_mask = np.uint8(img_mask)
+                suffix = os.path.basename(list(paths)[i])
+                layer_unit_dir = os.path.join(output_dir, 'images', args.experiment_name, name, 'unit_{:04}'.format(unitID + 1))
+                if not os.path.exists(layer_unit_dir):
+                    os.makedirs(layer_unit_dir)
+                out_img_name = os.path.join(layer_unit_dir, '{:04}_{}'.format(i + 1, suffix))
+                Image.fromarray(img_mask).save(out_img_name)

@@ -19,10 +19,7 @@ import models.resnet
 
 
 # pytorch 0.2 and torchvision 0.1.9
-import sys
 import torchvision
-assert sys.version.startswith('2')
-assert torch.__version__.startswith('0.2')
 assert '0.1.9' in torchvision.__file__
 
 
@@ -42,7 +39,7 @@ class DDSM(torch.utils.data.Dataset):
     def __init__(self, root, image_list_path, split, patch_size, transform):
         self.root = root
         with open(image_list_path, 'r') as f:
-            self.image_names = map(lambda line: line.strip(), f.readlines())
+            self.image_names = list(map(lambda line: line.strip(), f.readlines()))
         self.patch_size = patch_size
         self.transform = transform
 
@@ -114,18 +111,20 @@ def main(args):
     features_layer.register_forward_hook(feature_hook)
     prob_maps = []
     max_class_probs = []
-    for _, image in tqdm(val_dataset):
-        input_var = Variable(image.unsqueeze(0), volatile=True)
-        output = model(input_var)
-        output = output.transpose(1, 3).contiguous()
-        size = output.size()[:3]
-        output = output.view(-1, output.size(3))
-        prob = nn.Softmax()(output)
-        prob = prob.view(size[0], size[1], size[2], -1)
-        prob = prob.transpose(1, 3)
-        prob = prob.data.cpu().numpy()
-        prob_map = prob[0]
-        prob_maps.append(prob_map)
+    with torch.no_grad():
+        for _, image in tqdm(val_dataset):
+            input = image.unsqueeze(0)
+            input = input.cuda()
+            output = model(input)
+            output = output.transpose(1, 3).contiguous()
+            size = output.size()[:3]
+            output = output.view(-1, output.size(3))
+            prob = nn.Softmax(dim=1)(output)
+            prob = prob.view(size[0], size[1], size[2], -1)
+            prob = prob.transpose(1, 3)
+            prob = prob.cpu().numpy()
+            prob_map = prob[0]
+            prob_maps.append(prob_map)
 
     # save final fc layer weights
     params = list(model.parameters())
@@ -137,7 +136,7 @@ def main(args):
     weighted_max_activations = max_activations * weight_softmax
     unit_indices = np.argsort(-weighted_max_activations, axis=2)
     all_unit_indices_and_counts = []
-    for class_index in xrange(cfg.arch.num_classes):
+    for class_index in range(cfg.arch.num_classes):
         num_top_units = 8
         unit_indices_and_counts = zip(*np.unique(unit_indices[:, class_index, :num_top_units].ravel(), return_counts=True))
         unit_indices_and_counts.sort(key=lambda x: -x[1])
@@ -151,7 +150,7 @@ def main(args):
         pickle.dump(all_unit_indices_and_counts, f)
 
     # print some statistics
-    for class_index in xrange(cfg.arch.num_classes):
+    for class_index in range(cfg.arch.num_classes):
         print('class index: {}'.format(class_index))
         # which units show up in the top num_top_units all the time?
         # note: unit_id == unit_index + 1
