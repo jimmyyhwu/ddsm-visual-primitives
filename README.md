@@ -48,23 +48,20 @@ Please reference additional READMEs in the respective directories for more detai
 If you find our work useful for your research, please consider citing:
 
 ```
-@proceeding{doi: 10.1117/12.2293890,
-author = {Jimmy Wu, Diondra Peck, Scott Hsieh, Vandana Dialani, Constance D. Lehman, Bolei Zhou, Vasilis Syrgkanis, Lester Mackey, Genevieve Patterson},
-title = {Expert identification of visual primitives used by CNNs during mammogram classification},
-journal = {Proc.SPIE},
-volume = {10575},
-pages = {10575 - 10575 - 9},
-year = {2018},
-doi = {10.1117/12.2293890},
-URL = {https://doi.org/10.1117/12.2293890},
+@inproceedings{wu2018expert,
+  title={Expert identification of visual primitives used by CNNs during mammogram classification },
+  author={Wu, Jimmy and Peck, Diondra and Hsieh, Scott and Dialani, Vandana and Lehman, Constance D. and Zhou, Bolei and Syrgkanis, Vasilis and Mackey, Lester and Patterson, Genevieve},
+  booktitle={Proc. SPIE 10575, Medical Imaging 2018: Computer-Aided Diagnosis},
+  year={2018},
+  doi = {10.1117/12.2293890}
 }
 ```
 
 ```
 @article{wu2018deepminer,
-title={DeepMiner: Discovering Interpretable Representations for Mammogram Classification and Explanation},
-author={Wu, Jimmy and Zhou, Bolei and Peck, Diondra and Hsieh, Scott and Dialani, Vandana and Mackey, Lester and Patterson, Genevieve},
-journal={arXiv preprint arXiv:1805.12323},
-year={2018}
+  title={DeepMiner: Discovering Interpretable Representations for Mammogram Classification and Explanation},
+  author={Wu, Jimmy and Zhou, Bolei and Peck, Diondra and Hsieh, Scott and Dialani, Vandana and Mackey, Lester and Patterson, Genevieve},
+  journal={arXiv preprint arXiv:1805.12323},
+  year={2018}
 }
 ```
