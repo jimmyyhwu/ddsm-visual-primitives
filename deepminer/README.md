@@ -1,7 +1,7 @@
 
 # DeepMiner
 
-This code implements our proposed DeepMiner framework and applies it to the DDSM dataset.
+This code partially implements our proposed DeepMiner framework and applies it to the DDSM dataset.
 
 ## Usage
 
