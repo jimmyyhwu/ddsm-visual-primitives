@@ -5,7 +5,6 @@
 DDSM_JPG_DIR='../../../trainingDataDDSM'
 DDSM_OVERLAY_DIR='../../../ddsm_overlay'
 DDSM_PREPROCESS_DIR='../preprocessedData'
-CAFFE_ROOT=$CAFFE_ROOT
 
 CONTEST_IMAGES_DIRECTORY="../../../trainingData"
 CONTEST_EXAMS_METADATA_FILENAME="../../../metadata/exams_metadata.tsv"

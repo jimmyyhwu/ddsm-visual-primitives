@@ -1,8 +1,6 @@
 #!/bin/bash
 # Splits a DDSM patch data set into a training, validation,
-# and test sets and stores training and validation sets in 
-# an LMDB format that can directly be used by the deep learning 
-# framework Caffe.
+# and test sets.
 #
 # Args:
 #   LABEL_FILE: Input DDSM label file to split
@@ -40,8 +38,6 @@ IMAGES_DIRECTORY=data/ddsm/patches/images
 # This folder will have no subfolder substructure.
 # Needed when calling the lmdb function. 
 PREPROCESS_IMAGES_DIRECTORY=data/ddsm/patches/resized_images
-# Director where to store the output of the lmdb command
-LMDB_DIRECTORY=lmdb #data/ddsm/patches/lmdb
 
 # We will now resize each input jpg image from the ddsm director into a 227x227 image
 # and store it in the preprocess image directory. The convert and parallel function
@@ -64,8 +60,6 @@ python generate_ddsm_patch_train_val_test_sets.py \
 	$VAL_FRAC \
 	$SEED
 
-# Create lmdb directory if it does not exist already
-mkdir -p $LMDB_DIRECTORY
 
 # The generate sets script output contains the names of the original images
 # which are in jpg format. So here we just replace the ending of the filenames from jpg
@@ -80,25 +74,5 @@ LABEL_FILE_BASE_SANS_EXT="${LABEL_FILE_BASE%.*}"
 # Construct training and validation file names without extensions
 TRAIN_LABEL_NAME="train-seed${SEED}_train${TRAIN_FRAC}_val${VAL_FRAC}-${LABEL_FILE_BASE_SANS_EXT}"
 VAL_LABEL_NAME="val-seed${SEED}_train${TRAIN_FRAC}_val${VAL_FRAC}-${LABEL_FILE_BASE_SANS_EXT}"
-
-# Create LMDBs for the training and validation sets
-rm -R -f $LMDB_DIRECTORY/$TRAIN_LABEL_NAME
-rm -R -f $LMDB_DIRECTORY/$VAL_LABEL_NAME
-echo "Generating LMDB $TRAIN_LABEL_NAME"
-$CAFFE_ROOT/build/tools/convert_imageset --backend=lmdb \
-    --shuffle \
-    $PREPROCESS_IMAGES_DIRECTORY/ \
-    $LABEL_PATH/$TRAIN_LABEL_NAME.txt \
-    $LMDB_DIRECTORY/$TRAIN_LABEL_NAME
-echo "Generating LMDB $VAL_LABEL_NAME"
-$CAFFE_ROOT/build/tools/convert_imageset --backend=lmdb \
-    --shuffle \
-    $PREPROCESS_IMAGES_DIRECTORY/ \
-    $LABEL_PATH/$VAL_LABEL_NAME.txt \
-    $LMDB_DIRECTORY/$VAL_LABEL_NAME
-
-echo "Generating mean image for backgroud substraction"
-$CAFFE_ROOT/build/tools/compute_image_mean $LMDB_DIRECTORY/$TRAIN_LABEL_NAME \
-    $LMDB_DIRECTORY/mean_$TRAIN_LABEL_NAME.binaryproto
 
 echo "Done"
