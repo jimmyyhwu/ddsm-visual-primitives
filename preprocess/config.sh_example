@@ -1,0 +1,13 @@
+
+# Local file structure configuration params
+
+
+DDSM_JPG_DIR='../../../trainingDataDDSM'
+DDSM_OVERLAY_DIR='../../../ddsm_overlay'
+DDSM_PREPROCESS_DIR='../preprocessedData'
+CAFFE_ROOT=$CAFFE_ROOT
+
+CONTEST_IMAGES_DIRECTORY="../../../trainingData"
+CONTEST_EXAMS_METADATA_FILENAME="../../../metadata/exams_metadata.tsv"
+CONTEST_IMAGES_CROSSWALK_FILENAME="../../../metadata/images_crosswalk.tsv"
+CONTEST_PREPROCESSED_DIR='../preprocessedData'
