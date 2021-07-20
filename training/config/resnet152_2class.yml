@@ -13,5 +13,11 @@ optimizer:
     momentum: 0.9
     weight_decay: 0.0001
 training:
-    experiment_name: resnet152
-    resume: pretrained/resnet152/checkpoint_00000005.pth.tar
+    logs_dir: logs
+    checkpoints_dir: checkpoints
+    experiment_name: resnet152_2class
+    print_freq: 10
+    checkpoint_epochs: 1
+    log_dir:
+    epochs: 5
+    resume:

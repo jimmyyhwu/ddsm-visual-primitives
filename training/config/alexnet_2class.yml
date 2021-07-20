@@ -15,9 +15,9 @@ optimizer:
 training:
     logs_dir: logs
     checkpoints_dir: checkpoints
-    experiment_name: alexnet
+    experiment_name: alexnet_2class
     print_freq: 10
     checkpoint_epochs: 5
     log_dir:
-    epochs: 500
+    epochs: 45
     resume:

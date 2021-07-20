@@ -15,9 +15,9 @@ optimizer:
 training:
     logs_dir: logs
     checkpoints_dir: checkpoints
-    experiment_name: resnet152
+    experiment_name: resnet152_3class
     print_freq: 10
     checkpoint_epochs: 1
     log_dir:
-    epochs: 100
+    epochs: 5
     resume:

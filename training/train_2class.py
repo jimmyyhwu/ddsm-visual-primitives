@@ -16,12 +16,16 @@ from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import dataset
+import datasets
 
 
 # pytorch 1.0 and torchvision 0.1.9
 import torchvision
 assert '0.1.9' in torchvision.__file__
+
+# https://discuss.pytorch.org/t/inception3-runtimeerror-the-expanded-size-of-the-tensor-3-must-match-the-existing-size-864-at-non-singleton-dimension-3/32090
+from inception import inception_v3
+models.__dict__['inception_v3'] = inception_v3
 
 
 def accuracy(output, target):
@@ -201,11 +205,11 @@ def main(cfg):
         train_transforms.append(transforms.Scale(299))
         val_transforms.append(transforms.Scale(299))
 
-    train_dataset = dataset.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
+    train_dataset = datasets.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))
-    val_dataset = dataset.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
+    val_dataset = datasets.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))

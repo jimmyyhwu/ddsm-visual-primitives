@@ -16,7 +16,7 @@ from munch import Munch
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-import dataset
+import datasets
 
 
 # pytorch 1.0 and torchvision 0.1.9
@@ -209,11 +209,11 @@ def main(cfg):
         train_transforms.append(transforms.Scale(299))
         val_transforms.append(transforms.Scale(299))
 
-    train_dataset = dataset.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
+    train_dataset = datasets.DDSM(cfg.data.root, 'train', transforms.Compose(train_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))
-    val_dataset = dataset.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
+    val_dataset = datasets.DDSM(cfg.data.root, 'val', transforms.Compose(val_transforms + [
         transforms.ToTensor(),
         normalize,
     ]))

@@ -13,5 +13,5 @@ optimizer:
     momentum: 0.9
     weight_decay: 0.0001
 training:
-    experiment_name: alexnet
-    resume: pretrained/alexnet/checkpoint_00000045.pth.tar
+    experiment_name: alexnet_2class
+    resume: pretrained/alexnet_2class/checkpoint_00000045.pth.tar
