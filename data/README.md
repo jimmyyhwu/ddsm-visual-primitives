@@ -1,3 +1,5 @@
 # DDSM Data
 
-Please run [`download_data.sh`](../download_data.sh) in the parent directory to download and extract the DDSM data. The data should include `ddsm_patches`, `ddsm_labels`, and `ddsm_raws`.
+Please run [`download-data.sh`](download-data.sh) to download and extract the DDSM data. The data should include `ddsm_patches`, `ddsm_labels`, `ddsm_raw`, and `ddsm_masks`.
+
+*Optional:* See the [`preprocessing`](preprocessing) directory for code we used to preprocess the DDSM images to generate image patches. Note that the preprocessing code may require installing additional dependencies to run.
