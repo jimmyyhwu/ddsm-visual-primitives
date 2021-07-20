@@ -1,5 +1,5 @@
 # Config
-PyYAML==3.13
+PyYAML==5.4
 munch==2.3.2
 
 # Training
