@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 
 import numpy as np
 import torch
@@ -14,9 +15,18 @@ from PIL import Image
 from torch.autograd import Variable
 
 
+# pytorch 1.0 and torchvision 0.1.9
+import torchvision
+assert '0.1.9' in torchvision.__file__
+
+# https://discuss.pytorch.org/t/inception3-runtimeerror-the-expanded-size-of-the-tensor-3-must-match-the-existing-size-864-at-non-singleton-dimension-3/32090
+sys.path.append('../training')
+from inception import inception_v3
+models.__dict__['inception_v3'] = inception_v3
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--experiment_name', default='alexnet')
-parser.add_argument('--config_path', default='../training/pretrained/alexnet/config.yml')
+parser.add_argument('--experiment_name', default='alexnet_2class')
+parser.add_argument('--config_path', default='../training/pretrained/alexnet_2class/config.yml')
 parser.add_argument('--epoch', type=int, default=45)
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--workers', type=int, default=4)
@@ -42,7 +52,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 print("=> creating model '{}'".format(cfg.arch.model))
-model = models.__dict__[cfg.arch.model](pretrained=cfg.arch.pretrained)
+model = models.__dict__[cfg.arch.model]()
 
 if cfg.arch.model == 'alexnet':
     model.classifier._modules['6'] = nn.Linear(4096, cfg.arch.num_classes)
@@ -63,7 +73,7 @@ elif cfg.arch.model == 'vgg16':
         ('conv5_3', model.features[28])
     ]
 elif cfg.arch.model == 'inception_v3':
-    model = models.inception_v3(pretrained=cfg.arch.pretrained, transform_input=True)
+    model = models.inception_v3(transform_input=True)  # if pretrained is False then transform_input defaults to False
     model.aux_logits = False
     model.fc = nn.Linear(2048, cfg.arch.num_classes)
     features = [
@@ -91,7 +101,6 @@ if cfg.arch.model.startswith('alexnet') or cfg.arch.model.startswith('vgg'):
 else:
     model = torch.nn.DataParallel(model).cuda()
 cudnn.benchmark = True
-
 
 resume_path = cfg.training.resume.replace(cfg.training.resume[-16:-8], '{:08}'.format(args.epoch))
 resume_path = os.path.join('../training', resume_path)
