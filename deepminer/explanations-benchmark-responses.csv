@@ -1,0 +1,331 @@
+Case #,DeepMiner Explanation,Cancer or Benign (C/B)?
+650,"['Calcified vessels', 'Calcified vessels', 'Spiculation']",B
+253,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+725,"['Spiculation', 'Calcified vessels', 'Normal Breast Tissue']",B
+726,"['Normal Breast Tissue', 'Calcified vessels', 'Malignant pleomorphic calcifications']",B
+628,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+103,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+242,"['Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification', 'Masses with calcification clusters inside, a combination that is very suspicious.']",C
+233,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+401,"['Malignant pleomorphic calcifications', 'Spiculation', 'Normal Breast Tissue']",C
+31,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+580,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",B
+466,"['Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+542,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+88,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+522,"['Calcified vessels', 'Calcified vessels', 'Spiculation']",B
+478,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcifications and arterial calcification']",B
+455,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Edge of a mass with circumscribed margins']",C
+573,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+692,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+630,"['Benign calcifications, vascular clarification', 'Calcified vessels', 'Spiculation']",B
+120,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+91,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+264,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+46,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer']",C
+155,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Masses with calcification clusters inside, a combination that is very suspicious.']",C
+354,"['Malignant pleomorphic calcifications', 'Spiculation', 'Benign calcifications, vascular clarification']",C
+421,"['Spiculation', 'Calcified vessels', 'Malignant pleomorphic calcifications']",B
+117,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+731,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Spiculation']",C
+321,"['Spiculation', 'Normal Breast Tissue', 'Malignant pleomorphic calcifications']",B
+208,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+369,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Calcified vessels']",B
+291,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+364,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer']",C
+623,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+164,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+44,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+56,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",C
+505,"['Malignant pleomorphic calcifications', 'Masses with calcification clusters inside, a combination that is very suspicious.', 'Calcified vessels']",C
+373,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+116,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcifications and arterial calcification']",B
+118,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+168,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+681,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+285,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+553,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+368,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+64,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+528,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+594,"['Calcified vessels', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+41,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+563,"['Calcifications and arterial calcification', 'Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+127,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",B
+375,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+200,"['Calcified vessels', 'Calcified vessels', 'Malignant pleomorphic calcifications']",B
+215,"['Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",B
+209,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+32,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+331,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+136,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+104,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",B
+257,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+607,"['Normal Breast Tissue', 'Calcified vessels', 'Calcified vessels']",B
+54,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Calcified vessels']",B
+351,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Benign calcifications, vascular clarification']",B
+105,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+314,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+574,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+94,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+583,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+5,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+16,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",C
+715,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Normal Breast Tissue']",B
+138,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+508,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+307,"['Calcified vessels', 'Spiculation', 'Calcified vessels']",B
+494,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+538,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+729,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+664,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+334,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+43,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+409,"['Edge of the mass, speculations associated with cancer', 'Spiculation', 'Benign calcifications, vascular clarification']",C
+702,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+720,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+399,"['Calcified vessels', 'Normal Breast Tissue', 'Spiculation']",B
+453,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer']",C
+300,"['Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+26,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+28,"['Calcified vessels', 'Masses with calcification clusters inside, a combination that is very suspicious.', 'Edge of the mass, speculations associated with cancer']",C
+197,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+71,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+497,"['Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",B
+625,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+259,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+434,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+160,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Calcified vessels']",B
+110,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+30,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+152,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+166,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",B
+743,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+734,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+237,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+730,"['Calcified vessels', 'Spiculation', 'Normal Breast Tissue']",B
+589,"['Malignant pleomorphic calcifications', 'Spiculation', 'Normal Breast Tissue']",B
+468,"['Spiculation', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+757,"['Spiculation', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+631,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+337,"['Calcified vessels', 'Spiculation', 'Edge of the mass, speculations associated with cancer']",C
+150,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",B
+449,"['Calcified vessels', 'Spiculation', 'Edge of the mass, speculations associated with cancer']",C
+582,"['Spiculation', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+319,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+713,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+501,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+62,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+495,"['Calcified vessels', 'Benign calcifications, vascular clarification', 'Malignant pleomorphic calcifications']",B
+151,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+249,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+15,"['Edge of the mass, speculations associated with cancer', 'Benign calcifications, vascular clarification', 'Calcified vessels']",B
+622,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+225,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",C
+635,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",B
+170,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+213,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+223,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+333,"['Calcifications and arterial calcification', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+404,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+708,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+273,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+593,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Spiculation']",C
+533,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",C
+652,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",B
+172,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",C
+80,"['Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue', 'Spiculation']",C
+613,"['Masses with calcification clusters inside, a combination that is very suspicious.', 'Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer']",C
+42,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+38,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+61,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+49,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+610,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+78,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",B
+59,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",C
+604,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",C
+378,"['Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification', 'Normal Breast Tissue']",B
+6,"['Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue', 'Spiculation']",C
+343,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+250,"['Benign calcifications, vascular clarification', 'Normal Breast Tissue']",B
+0,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+239,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+355,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+39,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue']",C
+597,"['Calcified vessels', 'Benign calcifications, vascular clarification', 'Edge of the mass, speculations associated with cancer']",B
+547,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of a mass with circumscribed margins']",C
+585,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+386,"['Normal Breast Tissue', 'Benign calcifications, vascular clarification', 'Malignant pleomorphic calcifications']",B
+221,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+624,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Benign calcifications, vascular clarification']",B
+310,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Normal Breast Tissue']",B
+50,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Normal Breast Tissue']",B
+636,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Normal Breast Tissue']",B
+721,"['Calcified vessels', 'Spiculation', 'Normal Breast Tissue']",B
+37,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+87,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+391,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of a mass with circumscribed margins']",C
+261,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+419,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+663,"['Normal Breast Tissue', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",B
+275,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+753,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
+626,"['Spiculation', 'Normal Breast Tissue', 'Malignant pleomorphic calcifications']",C
+145,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+511,"['Edge of the mass, speculations associated with cancer', 'Spiculation', 'Calcifications and arterial calcification']",C
+682,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcifications and arterial calcification']",C
+436,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+534,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+180,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+367,"['Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification', 'Calcifications and arterial calcification']",B
+519,"['Malignant pleomorphic calcifications', 'Spiculation', 'Normal Breast Tissue']",C
+506,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+486,"['Calcified vessels', 'Spiculation', 'Malignant pleomorphic calcifications']",C
+612,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+135,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Normal Breast Tissue']",B
+315,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+586,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",C
+614,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",B
+34,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+347,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+601,"['Benign calcifications, vascular clarification', 'Normal Breast Tissue', 'Malignant pleomorphic calcifications']",B
+204,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",C
+27,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Normal Breast Tissue']",B
+216,"['Calcified vessels', 'Benign calcifications, vascular clarification', 'Normal Breast Tissue']",B
+100,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+499,"['Calcifications and arterial calcification', 'Spiculation', 'Calcified vessels']",B
+737,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+605,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Normal Breast Tissue']",B
+226,"['Calcified vessels', 'Spiculation', 'Malignant pleomorphic calcifications']",C
+544,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+483,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+153,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+381,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+205,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",C
+148,"['Benign calcifications, vascular clarification', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",B
+260,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+201,"['Calcified vessels', 'Calcified vessels', 'Normal Breast Tissue']",B
+637,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+502,"['Benign calcifications, vascular clarification', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+36,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Benign calcifications, vascular clarification']",C
+328,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+488,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+539,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",C
+251,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+357,"['Calcified vessels', 'Normal Breast Tissue', 'Malignant pleomorphic calcifications']",B
+276,"['Spiculation', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+286,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+615,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcified vessels']",C
+329,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+515,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+406,"['Calcified vessels', 'Calcifications and arterial calcification', 'Normal Breast Tissue']",B
+608,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+244,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+9,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+590,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",C
+492,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+413,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+738,"['Calcified vessels', 'Spiculation', 'Edge of the mass, speculations associated with cancer']",C
+243,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+102,"['Calcifications and arterial calcification', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+40,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+520,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+177,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+532,"['Spiculation', 'Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+140,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+51,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcifications and arterial calcification']",C
+746,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+33,"['Calcified vessels', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",B
+156,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+558,"['Calcified vessels', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",B
+323,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",B
+47,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+126,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",B
+20,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Spiculation']",C
+73,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+174,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Calcified vessels']",B
+101,"['Malignant pleomorphic calcifications', 'Spiculation', 'Benign calcifications, vascular clarification']",C
+723,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Spiculation']",C
+642,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+740,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",B
+480,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",B
+269,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+1,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+317,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+422,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+654,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcifications and arterial calcification']",C
+69,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+17,"['Spiculation', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+543,"['Benign calcifications, vascular clarification', 'Calcifications and arterial calcification', 'Spiculation']",B
+402,"['Normal Breast Tissue', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",B
+649,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcified vessels']",B
+352,"['Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification', 'Calcifications and arterial calcification']",B
+256,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+382,"['Normal Breast Tissue', 'Calcified vessels', 'Benign calcifications, vascular clarification']",B
+420,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+339,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Normal Breast Tissue']",B
+122,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Spiculation']",B
+290,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Spiculation']",B
+545,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Spiculation']",B
+23,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+258,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Normal Breast Tissue']",B
+22,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+196,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+699,"['Normal Breast Tissue', 'Benign calcifications, vascular clarification', 'Malignant pleomorphic calcifications']",B
+752,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Edge of a mass with circumscribed margins']",C
+231,"['Calcified vessels', 'Benign calcifications, vascular clarification', 'Malignant pleomorphic calcifications']",B
+755,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",B
+567,"['Malignant pleomorphic calcifications', 'Spiculation', 'Calcifications and arterial calcification']",C
+214,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+113,"['Benign calcifications, vascular clarification', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+579,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Normal Breast Tissue']",B
+45,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",C
+247,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+25,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+322,"['Malignant pleomorphic calcifications', 'Spiculation', 'Normal Breast Tissue']",C
+627,"['Calcified vessels', 'Calcified vessels', 'Malignant pleomorphic calcifications']",B
+13,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+677,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+90,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+159,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Normal Breast Tissue']",B
+19,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+299,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Calcifications and arterial calcification']",B
+376,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer']",C
+719,"['Spiculation', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",C
+83,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Spiculation']",C
+685,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Edge of the mass, speculations associated with cancer']",C
+709,"['Edge of the mass, speculations associated with cancer', 'Edge of a mass with circumscribed margins', 'Malignant pleomorphic calcifications']",C
+161,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",B
+72,"['Edge of the mass, speculations associated with cancer', 'Edge of a mass with circumscribed margins', 'Calcified vessels']",C
+206,"['Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue', 'Malignant pleomorphic calcifications']",C
+8,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+448,"['Calcified vessels', 'Edge of a mass with circumscribed margins', 'Edge of the mass, speculations associated with cancer']",C
+640,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",C
+717,"['Edge of the mass, speculations associated with cancer', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+21,"['Calcified vessels', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+92,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Spiculation']",C
+728,"['Normal Breast Tissue', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+3,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Calcified vessels']",C
+397,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+739,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Spiculation']",C
+564,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Normal Breast Tissue']",B
+142,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Normal Breast Tissue']",B
+326,"['Calcified vessels', 'Spiculation', 'Malignant pleomorphic calcifications']",C
+4,"['Edge of the mass, speculations associated with cancer', 'Spiculation', 'Calcified vessels']",C
+335,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+232,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+114,"['Spiculation', 'Malignant pleomorphic calcifications', 'Calcifications and arterial calcification']",C
+302,"['Malignant pleomorphic calcifications', 'Normal Breast Tissue', 'Edge of the mass, speculations associated with cancer']",C
+77,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Benign calcifications, vascular clarification']",B
+313,"['Calcified vessels', 'Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications']",C
+330,"['Malignant pleomorphic calcifications', 'Calcified vessels', 'Benign calcifications, vascular clarification']",B
+304,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Calcified vessels']",B
+389,"['Malignant pleomorphic calcifications', 'Calcified vessels']",B
+133,"['Calcified vessels', 'Malignant pleomorphic calcifications', 'Benign calcifications, vascular clarification']",B
+751,"['Spiculation', 'Malignant pleomorphic calcifications', 'Normal Breast Tissue']",C
+178,"['Malignant pleomorphic calcifications', 'Edge of the mass, speculations associated with cancer', 'Normal Breast Tissue']",C
+403,"['Spiculation', 'Calcified vessels', 'Malignant pleomorphic calcifications']",C
+394,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Spiculation']",C
+167,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Spiculation']",C
+24,"['Edge of the mass, speculations associated with cancer', 'Malignant pleomorphic calcifications', 'Calcified vessels']",C
+115,"['Malignant pleomorphic calcifications', 'Calcifications and arterial calcification', 'Calcified vessels']",B
