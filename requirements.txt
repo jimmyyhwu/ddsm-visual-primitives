@@ -1,0 +1,16 @@
+# Config
+PyYAML==3.13
+munch==2.3.2
+
+# Training
+torchnet==0.0.4
+tensorboardX==1.5
+jupyter==1.0.0
+tensorflow==1.12.0
+
+# Server
+Flask==1.0.2
+
+# DeepMiner
+joblib==0.13.0
+scikit-image==0.14.1
