@@ -4,14 +4,14 @@ data:
     workers: 4
 arch:
     num_classes: 2
-    model: vgg16
+    model: resnet152
     pretrained: true
 optimizer:
     type: sgd
     lr: 0.0001
-    lr_decay_epochs: []
+    lr_decay_epochs: [4]
     momentum: 0.9
     weight_decay: 0.0001
 training:
-    experiment_name: vgg16
-    resume: pretrained/vgg16/checkpoint_00000012.pth.tar
+    experiment_name: resnet152_2class
+    resume: pretrained/resnet152_2class/checkpoint_00000005.pth.tar

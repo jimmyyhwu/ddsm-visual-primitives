@@ -4,7 +4,7 @@ data:
     workers: 4
 arch:
     num_classes: 2
-    model: inception_v3
+    model: vgg16
     pretrained: true
 optimizer:
     type: sgd
@@ -13,5 +13,11 @@ optimizer:
     momentum: 0.9
     weight_decay: 0.0001
 training:
-    experiment_name: inception_v3
-    resume: pretrained/inception_v3/checkpoint_00000007.pth.tar
+    logs_dir: logs
+    checkpoints_dir: checkpoints
+    experiment_name: vgg16_2class
+    print_freq: 10
+    checkpoint_epochs: 1
+    log_dir:
+    epochs: 12
+    resume:
