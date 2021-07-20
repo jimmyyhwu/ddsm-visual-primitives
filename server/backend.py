@@ -56,14 +56,14 @@ def get_units(name, model, layer, sample=8, full=False, ranked=False):
         image_names = sorted(os.listdir(os.path.join(STATIC_DIR, unit_dir)))[:sample]
         unit_labels = [labels[image_name[5:]] for image_name in image_names]
         unit_labels_str = ' '.join(['+' if label == 1 else '-' for label in unit_labels])
-        image_paths = map(lambda x: os.path.join(unit_dir, x), image_names)
+        image_paths = list(map(lambda x: os.path.join(unit_dir, x), image_names))
         units.append((unit, message, image_paths, unit_labels_str))
         sums.append(sample - sum(unit_labels))
     if ranked == True:
         num_units_per_class = 20
         ranked_units = []
         rankings_path = 'data/unit_rankings/{}/{}/rankings.pkl'.format(model, layer)
-        with open(rankings_path, 'r') as f:
+        with open(rankings_path, 'rb') as f:
             rankings = pickle.load(f)
         for class_index, unit_rankings in enumerate(rankings):
             for unit_index, count in unit_rankings[:num_units_per_class]:
@@ -103,7 +103,7 @@ def get_unit_data(name, model, layer, unit, sample=32, num_cols=4):
             'label': label
         }
         entries.append(entry)
-    data = [entries[i:i + num_cols] for i in xrange(0, len(entries), num_cols)]
+    data = [entries[i:i + num_cols] for i in range(0, len(entries), num_cols)]
     responses = get_responses(name)
     old_response = None
     key = '{}/{}/{}'.format(model, layer, unit)
@@ -115,7 +115,7 @@ def get_labels():
     labels = {}
     for labels_path in glob.glob('data/labels/*.pickle'):
         print(labels_path)
-        with open(labels_path, 'r') as f:
+        with open(labels_path, 'rb') as f:
             labels.update(pickle.load(f))
     return labels
 
@@ -124,14 +124,14 @@ def log_response(data):
         os.makedirs(LOG_DIR)
     timestamp = data['timestamp']
     filename = '{}_response.pickle'.format(timestamp)
-    with open(os.path.join(LOG_DIR, filename), 'w') as f:
+    with open(os.path.join(LOG_DIR, filename), 'wb') as f:
         pickle.dump(data, f)
 
 def get_responses(name):
-    encoded_name = base64.urlsafe_b64encode(name)
+    encoded_name = base64.urlsafe_b64encode(name.encode())
     data_path = os.path.join(DATA_DIR, '{}.pickle'.format(encoded_name))
     if os.path.exists(data_path):
-        with open(data_path, 'r') as f:
+        with open(data_path, 'rb') as f:
             responses = pickle.load(f)
     else:
         responses = {}
@@ -144,19 +144,19 @@ def store_response(name, model, layer, unit, data):
     responses = get_responses(name)
     key = '{}/{}/{}'.format(model, layer, unit)
     responses[key] = data
-    encoded_name = base64.urlsafe_b64encode(name)
+    encoded_name = base64.urlsafe_b64encode(name.encode())
     data_path = os.path.join(DATA_DIR, '{}.pickle'.format(encoded_name))
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
-    with open(data_path, 'w') as f:
+    with open(data_path, 'wb') as f:
         pickle.dump(responses, f)
 
 def get_summary():
     summary = []
     for pickle_path in sorted(glob.glob(os.path.join(DATA_DIR, '*.pickle'))):
-        with open(pickle_path, 'r') as f:
+        with open(pickle_path, 'rb') as f:
             responses = pickle.load(f)
-        name = responses.itervalues().next()['name']
+        name = next(iter(responses.values()))['name']
         responded_units = get_responded_units(name)
         summary.append((name, responded_units))
     return summary
