@@ -6,7 +6,7 @@ munch==2.3.2
 torchnet==0.0.4
 tensorboardX==1.5
 jupyter==1.0.0
-tensorflow==1.12.0
+tensorflow==2.5.1
 
 # Server
 Flask==1.0.2
