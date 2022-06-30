@@ -7,7 +7,7 @@ This code release accompanies the following two papers:
 
 Jimmy Wu, Diondra Peck, Scott Hsieh, Vandana Dialani, Constance D. Lehman, Bolei Zhou, Vasilis Syrgkanis, Lester Mackey, Genevieve Patterson
 
-*SPIE Medical Imaging 2018*
+*SPIE Medical Imaging*, 2018
 
 **Abstract:** This work interprets the internal representations of deep neural networks trained for classification of diseased tissue in 2D mammograms. We propose an expert-in-the-loop interpretation method to label the behavior of internal units in convolutional neural networks (CNNs). Expert radiologists identify that the visual patterns detected by the units are correlated with meaningful medical phenomena such as mass tissue and calcificated vessels. We demonstrate that several trained CNN models are able to produce explanatory descriptions to support the final classification decisions. We view this as an important first step toward interpreting the internal representations of medical classification CNNs and explaining their predictions.
 
@@ -15,9 +15,9 @@ Jimmy Wu, Diondra Peck, Scott Hsieh, Vandana Dialani, Constance D. Lehman, Bolei
 
 Jimmy Wu, Bolei Zhou, Diondra Peck, Scott Hsieh, Vandana Dialani, Lester Mackey, Genevieve Patterson
 
-**Abstract:** We propose DeepMiner, a framework to discover interpretable representations in deep neural networks and to build explanations for medical predictions. By probing convolutional neural networks (CNNs) trained to classify cancer in mammograms, we show that many individual units in the final convolutional layer of a CNN respond strongly to diseased tissue concepts specified by the BI-RADS lexicon. After expert annotation of the interpretable units, our proposed method is able to generate explanations for CNN mammogram classification that are consistent with ground truth radiology reports on the Digital Database for Screening Mammography. We show that DeepMiner not only enables better understanding of the nuances of CNN classification decisions but also possibly discovers new visual knowledge relevant to medical diagnosis.
+*Harvard Data Science Review (HDSR)*, 2021
 
-*Harvard Data Science Review 2021*
+**Abstract:** We propose DeepMiner, a framework to discover interpretable representations in deep neural networks and to build explanations for medical predictions. By probing convolutional neural networks (CNNs) trained to classify cancer in mammograms, we show that many individual units in the final convolutional layer of a CNN respond strongly to diseased tissue concepts specified by the BI-RADS lexicon. After expert annotation of the interpretable units, our proposed method is able to generate explanations for CNN mammogram classification that are consistent with ground truth radiology reports on the Digital Database for Screening Mammography. We show that DeepMiner not only enables better understanding of the nuances of CNN classification decisions but also possibly discovers new visual knowledge relevant to medical diagnosis.
 
 <img src="figure.png" width="100%">
 
